@@ -1,0 +1,7 @@
+[
+    {"meeting_key": 47, "session_key": 9540, "driver_number": 1, "lap_number": 1, "lap_duration": 95.234, "compound": "SOFT", "stint": 1, "is_pit_out_lap": false, "date_start": "2024-11-03T17:05:00Z"},
+    {"meeting_key": 47, "session_key": 9540, "driver_number": 1, "lap_number": 2, "lap_duration": 82.101, "compound": "SOFT", "stint": 1, "is_pit_out_lap": false, "date_start": "2024-11-03T17:06:30Z"},
+    {"meeting_key": 47, "session_key": 9540, "driver_number": 1, "lap_number": 3, "lap_duration": 81.895, "compound": "SOFT", "stint": 1, "is_pit_out_lap": false, "date_start": "2024-11-03T17:08:00Z"},
+    {"meeting_key": 47, "session_key": 9540, "driver_number": 44, "lap_number": 1, "lap_duration": 96.001, "compound": "MEDIUM", "stint": 1, "is_pit_out_lap": false, "date_start": "2024-11-03T17:05:05Z"},
+    {"meeting_key": 47, "session_key": 9540, "driver_number": 44, "lap_number": 2, "lap_duration": 82.500, "compound": "MEDIUM", "stint": 1, "is_pit_out_lap": false, "date_start": "2024-11-03T17:06:35Z"}
+]

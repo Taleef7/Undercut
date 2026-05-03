@@ -27,7 +27,7 @@ def load_decision_points(yaml_path: str, db_path: str):
 
         conn.execute(
             """
-            INSERT INTO race_state_decision_point
+            INSERT OR REPLACE INTO race_state_decision_point
             (decision_point_id, session_id, driver_id, lap_number, decision_type,
              scenario_title, scenario_description, available_actions_json,
              actual_decision, actual_outcome_summary, explanation_short, explanation_long,
