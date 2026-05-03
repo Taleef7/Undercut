@@ -1,0 +1,61 @@
+# Brazil 2024 Decision Points
+
+decision_points:
+  - id: "brazil_2024_lap32"
+    session_id: "R"
+    driver_id: "VER"
+    lap_number: 32
+    decision_type: "pit_now_vs_stay_out"
+    scenario_title: "VER vs NOR battle - pit decision under pressure"
+    scenario_description: |
+      Lap 32 of the 2024 Brazilian GP. Verstappen is pressuring Norris for P2.
+      Your driver is VER. Medium tires are 14 laps old. Gap to Norris is 1.2 seconds.
+      Rain is starting to fall. Team asks: pit now or stay out?
+    available_actions:
+      - "pit_now_inter"
+      - "pit_now_hard"
+      - "stay_out"
+      - "extend_stint"
+    actual_decision: "stay_out"
+    actual_outcome_summary: "VER stayed out, passed Norris on track, won the race"
+    explanation_short: "Staying out was the right call - wet track favored experienced drivers"
+    explanation_long: |
+      By pitting earlier, VER would have lost track position to Norris who had
+      fresher tires. By staying out, VER inherited the lead when Norris pitted
+      and controlled the race from the front in wet conditions.
+
+  - id: "brazil_2024_lap48"
+    session_id: "R"
+    driver_id: "VER"
+    lap_number: 48
+    decision_type: "switch_to_wet"
+    scenario_title: "Rain starting - wet weather call"
+    scenario_description: |
+      Lap 48. Light rain has started. Track is drying but conditions are tricky.
+      Your driver is VER on intermediate tires, 18 laps old. Gap to P2 is 4.5 seconds.
+      Team asks: stay on inters or switch to wets?
+    available_actions:
+      - "stay_inter"
+      - "pit_wet"
+      - "wait_and_see"
+    actual_decision: "stay_inter"
+    actual_outcome_summary: "VER stayed on inters, built lead, won the race"
+    explanation_short: "Inters were the right call - track was mostly dry"
+
+  - id: "brazil_2024_lap68"
+    session_id: "R"
+    driver_id: "VER"
+    lap_number: 68
+    decision_type: "final_stint_tire_management"
+    scenario_title: "Final stint - tire management"
+    scenario_description: |
+      Lap 68 (final lap). VER is leading on hard tires, 28 laps old.
+      Gap to P2 is 12 seconds. Race is essentially over.
+      Team asks: push for fastest lap or manage to the finish?
+    available_actions:
+      - "push"
+      - "manage"
+      - "ease_off"
+    actual_decision: "manage"
+    actual_outcome_summary: "VER took the flag, finished P1"
+    explanation_short: "No point risking it - race was won"
