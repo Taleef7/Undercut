@@ -86,3 +86,96 @@ CREATE TABLE IF NOT EXISTS dim_track_status_code (
     data_version VARCHAR,
     record_hash VARCHAR
 );
+
+CREATE TABLE IF NOT EXISTS fact_session_result (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    constructor_ref VARCHAR,
+    classified_position VARCHAR,
+    position_order INTEGER,
+    grid_position INTEGER,
+    points FLOAT,
+    laps_completed INTEGER,
+    status VARCHAR,
+    time_millis INTEGER,
+    time_gap VARCHAR,
+    source_system VARCHAR,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_version VARCHAR,
+    record_hash VARCHAR,
+    PRIMARY KEY (session_id, driver_ref)
+);
+
+CREATE TABLE IF NOT EXISTS fact_lap (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    lap_number INTEGER,
+    lap_time_ms DOUBLE,
+    lap_time_seconds DOUBLE,
+    tyre_compound_id INTEGER,
+    compound_label_source VARCHAR,
+    stint_number INTEGER,
+    is_pit_out_lap BOOLEAN,
+    lap_start_time VARCHAR,
+    source_system VARCHAR,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_version VARCHAR,
+    record_hash VARCHAR,
+    PRIMARY KEY (session_id, driver_ref, lap_number)
+);
+
+CREATE TABLE IF NOT EXISTS fact_stint (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    stint_number INTEGER,
+    tyre_compound_id INTEGER,
+    compound_label_source VARCHAR,
+    lap_start INTEGER,
+    lap_end INTEGER,
+    tyre_age_at_start INTEGER,
+    source_system VARCHAR,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_version VARCHAR,
+    record_hash VARCHAR,
+    PRIMARY KEY (session_id, driver_ref, stint_number)
+);
+
+CREATE TABLE IF NOT EXISTS fact_pit_stop (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    lap_number INTEGER,
+    pit_duration_seconds DOUBLE,
+    pit_time VARCHAR,
+    source_system VARCHAR,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_version VARCHAR,
+    record_hash VARCHAR,
+    PRIMARY KEY (session_id, driver_ref, lap_number)
+);
+
+CREATE TABLE IF NOT EXISTS fact_weather_sample (
+    session_id VARCHAR,
+    sample_time VARCHAR,
+    air_temperature_c DOUBLE,
+    track_temperature_c DOUBLE,
+    humidity_pct INTEGER,
+    rainfall_flag BOOLEAN,
+    source_system VARCHAR,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_version VARCHAR,
+    record_hash VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS fact_race_control_event (
+    session_id VARCHAR,
+    event_time VARCHAR,
+    category VARCHAR,
+    flag VARCHAR,
+    scope VARCHAR,
+    message VARCHAR,
+    lap_number INTEGER,
+    source_system VARCHAR,
+    ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    data_version VARCHAR,
+    record_hash VARCHAR
+);
