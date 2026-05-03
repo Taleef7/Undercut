@@ -1,37 +1,40 @@
 import yaml
 import duckdb
+import json
 import os
 from pathlib import Path
 
+
 def load_decision_points(yaml_path: str, db_path: str):
     """Loads decision points from YAML into DuckDB."""
-    # Load YAML
     with open(yaml_path, 'r') as f:
         data = yaml.safe_load(f)
-    
-    decision_points = data.get('decision_points', [])
+
+    if isinstance(data, dict) and 'decision_points' in data:
+        decision_points = data.get('decision_points', [])
+    else:
+        decision_points = data if isinstance(data, list) else []
+
     if not decision_points:
         print("No decision points found in YAML.")
         return
 
-    # Connect to DuckDB
     conn = duckdb.connect(db_path)
-    
-    # Ensure table exists (running schema.sql first is recommended)
-    # For simplicity in this script, we just assume the table was created by schema.sql
-    
+
     for dp in decision_points:
-        # available_actions is a list, need to convert to JSON string for the DB
-        import json
         actions_json = json.dumps(dp.get('available_actions', []))
-        
+        race_state = dp.get('race_state', {})
+
         conn.execute(
             """
-            INSERT INTO race_state_decision_point 
-            (decision_point_id, session_id, driver_id, lap_number, decision_type, 
-             scenario_title, scenario_description, available_actions_json, 
-             actual_decision, actual_outcome_summary, explanation_short, explanation_long)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO race_state_decision_point
+            (decision_point_id, session_id, driver_id, lap_number, decision_type,
+             scenario_title, scenario_description, available_actions_json,
+             actual_decision, actual_outcome_summary, explanation_short, explanation_long,
+             current_position, gap_ahead_seconds, gap_behind_seconds, compound,
+             stint_age_laps, laps_remaining, track_temperature_c, air_temperature_c,
+             rainfall, track_status, safety_car_active, virtual_safety_car_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 dp.get('id'),
@@ -45,17 +48,29 @@ def load_decision_points(yaml_path: str, db_path: str):
                 dp.get('actual_decision'),
                 dp.get('actual_outcome_summary'),
                 dp.get('explanation_short'),
-                dp.get('explanation_long')
+                dp.get('explanation_long'),
+                race_state.get('current_position'),
+                race_state.get('gap_ahead_seconds'),
+                race_state.get('gap_behind_seconds'),
+                race_state.get('compound'),
+                race_state.get('stint_age_laps'),
+                race_state.get('laps_remaining'),
+                race_state.get('track_temperature_c'),
+                race_state.get('air_temperature_c'),
+                race_state.get('rainfall'),
+                race_state.get('track_status'),
+                race_state.get('safety_car_active'),
+                race_state.get('virtual_safety_car_active'),
             )
         )
-    
+
     print(f"Successfully loaded {len(decision_points)} decision points from {yaml_path}.")
     conn.close()
 
+
 if __name__ == "__main__":
-    # Paths relative to project root
     ROOT = Path(__file__).parent.parent
     YAML_FILE = ROOT / "data" / "decision_points" / "brazil_2024.yaml"
     DB_FILE = ROOT / "data" / "undercut.db"
-    
+
     load_decision_points(str(YAML_FILE), str(DB_FILE))

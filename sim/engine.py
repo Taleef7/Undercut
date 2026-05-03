@@ -3,8 +3,9 @@ Core Simulation Engine - Orchestrates pit, tire, and scoring models.
 """
 from typing import Dict, List, Any
 from dataclasses import dataclass
+from .circuit_config import CIRCUIT_CONFIG
 from .pit_model import get_pit_loss, estimate_pit_delta
-from .tire_model import TireState, estimate_lap_time, get_degradation_multiplier
+from .tire_model import TireState, estimate_lap_time, get_degradation_multiplier, is_in_tire_cliff_zone
 from .scoring import score_decision, StrategyDecision, ScenarioContext
 
 @dataclass
@@ -31,14 +32,21 @@ class UndercutEngine:
         Simulate the outcome of a user's decision.
         """
         # 1. Estimate lap time for current state
+        import warnings
+        circuit_config = CIRCUIT_CONFIG.get(self.circuit)
+        if circuit_config is None:
+            warnings.warn(f"Unknown circuit '{self.circuit}', using default base lap time")
+            base_lap_time_ms = 90000
+        else:
+            base_lap_time_ms = circuit_config["base_lap_time_ms"]
         tire_state = TireState(compound=context.compound, stint_age=context.stint_age)
         est_lap_time = estimate_lap_time(
-            base_lap_time_ms=90000, # Default 1:30 base
+            base_lap_time_ms=base_lap_time_ms,
             tire_state=tire_state
         )
 
         # 2. Calculate position impact if pitting
-        if decision.action == "pit_now":
+        if decision.action.startswith("pit_"):
             pit_loss = get_pit_loss(self.circuit)
             pos_delta = estimate_pit_delta(
                 current_position=context.position,
@@ -50,7 +58,6 @@ class UndercutEngine:
         else:
             # stay_out or extend_stint
             # Simplified: expect to keep position unless tires are in cliff
-            from .tire_model import is_in_tire_cliff_zone
             if is_in_tire_cliff_zone(context.compound, context.stint_age):
                 expected_pos = context.position + 1
             else:
@@ -60,7 +67,7 @@ class UndercutEngine:
         risk_score = 0.5 # Neutral
         if decision.action == "stay_out" and context.stint_age > 25:
             risk_score = 0.8 # High risk of cliff
-        elif decision.action == "pit_now" and context.gap_ahead < 5.0:
+        elif decision.action.startswith("pit_") and context.gap_ahead < 5.0:
             risk_score = 0.7 # High risk of rejoining in traffic
 
         return SimResult(
@@ -100,7 +107,8 @@ class UndercutEngine:
             "score": score_data["score"],
             "grade": score_data["grade"],
             "explanation": score_data["explanation"],
+            "model_recommendation": score_data["model_recommendation"],
             "expected_position": user_sim.expected_position,
             "risk_score": user_sim.risk_score,
-            "estimated_lap_time": user_sim.estimated_lap_time
+            "estimated_lap_time": user_sim.estimated_lap_time,
         }

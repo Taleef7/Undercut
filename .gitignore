@@ -23,6 +23,9 @@ ENV/
 *.swo
 *~
 
+# Worktrees
+.worktrees/
+
 # Data
 *.duckdb
 *.duckdb.wal

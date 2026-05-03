@@ -50,7 +50,7 @@ def get_degradation_multiplier(compound: str, stint_age: int) -> float:
     
     deg_curve = TIRE_DEGRADATION[compound]
     if stint_age >= len(deg_curve):
-        return deg_curve[-1]
+        return 1.0 + deg_curve[-1]
     return 1.0 + deg_curve[stint_age]
 
 
