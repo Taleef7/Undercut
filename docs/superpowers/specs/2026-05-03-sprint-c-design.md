@@ -400,17 +400,42 @@ def write_report(warnings: list[str], errors: list[str], season: int,
 **Prerequisites:** fact_lap, fact_stint, fact_pit_stop, fact_interval_sample, fact_weather_sample, fact_race_control_event, fact_position_sample, dim_session, dim_driver.
 
 ```python
-def check_prerequisites(session_id: str, db_path: Path) -> None:
-    """Raise ValueError if any prerequisite fact table is empty for session."""
-    tables = ["fact_lap", "fact_stint", "fact_pit_stop", "fact_interval_sample",
-              "fact_weather_sample", "fact_race_control_event", "fact_position_sample"]
-    for table in tables:
-        count = conn.execute(f"SELECT COUNT(*) FROM {table} WHERE session_id = ?",
-                             [session_id]).fetchone()[0]
+def check_prerequisites(session_id: str, db_path: Path) -> list[str]:
+    """
+    Verify prerequisite tables have data. Returns list of warning messages.
+    Raises ValueError only for hard prerequisites.
+
+    Hard prerequisites (build cannot proceed without these):
+        fact_lap, fact_stint, fact_pit_stop
+    Soft prerequisites (log warning if missing, use NULL/defaults):
+        fact_interval_sample, fact_position_sample, fact_weather_sample,
+        fact_race_control_event
+    """
+    warnings = []
+    hard = ["fact_lap", "fact_stint", "fact_pit_stop"]
+    soft = ["fact_interval_sample", "fact_position_sample",
+            "fact_weather_sample", "fact_race_control_event"]
+
+    for table in hard:
+        count = conn.execute(
+            f"SELECT COUNT(*) FROM {table} WHERE session_id = ?",
+            [session_id]
+        ).fetchone()[0]
         if count == 0:
             raise ValueError(
                 f"No {table} rows for session {session_id}. Run 'normalize' first."
             )
+
+    for table in soft:
+        count = conn.execute(
+            f"SELECT COUNT(*) FROM {table} WHERE session_id = ?",
+            [session_id]
+        ).fetchone()[0]
+        if count == 0:
+            msg = f"WARNING: No {table} rows for session {session_id}. Derived columns depending on this table will be NULL."
+            warnings.append(msg)
+
+    return warnings
 
 def build_race_state_driver_lap(session_id: str, db_path: Path) -> int:
     """
@@ -419,12 +444,15 @@ def build_race_state_driver_lap(session_id: str, db_path: Path) -> int:
     Derived columns:
     - stint_age_laps: lap_number - fact_stint.lap_start
     - laps_remaining: total_laps - lap_number
+    - is_pit_lap: TRUE if lap_number is within 1 lap of a fact_pit_stop (pit in/out laps have abnormally slow times)
     - interval_behind_seconds: from fact_interval_sample (nearest lap)
     - driver_ahead_id, driver_behind_id: from fact_position_sample
     - safety_car_active_flag: from fact_race_control_event spanning that lap
-    - rolling_3_lap_avg_ms: avg of lap_time_ms for laps N-2, N-1, N
-    - rolling_5_lap_avg_ms: avg of lap_time_ms for laps N-4..N
-    - pace_delta_to_field_ms: driver rolling 3-lap avg - field median rolling 3-lap avg
+    - rolling_3_lap_avg_ms: avg of lap_time_ms for laps N-2, N-1, N (excluding pit laps)
+    - rolling_5_lap_avg_ms: avg of lap_time_ms for laps N-4..N (excluding pit laps)
+    - pace_delta_to_field_ms: driver's rolling_3_lap_avg_ms - field median rolling_3_lap_avg_ms
+        where "field median" = median of all non-pit-lap drivers' rolling_3_lap_avg_ms
+        at the same lap number (is_pit_lap = FALSE rows only)
     - undercut_threat_flag: interval_behind < 2.0 AND rival stint_age > own stint_age + 5
     - pit_window_open_flag: stint_age > compound_optimal_window
     - track_status_normalized: derived from race_control events
@@ -532,7 +560,7 @@ This applies to all fact tables that may have overlapping coverage.
 
 ---
 
-## 11. CLI (run_pipeline.py)
+## 12. CLI (run_pipeline.py)
 
 ### 11.1 Commands
 
@@ -587,7 +615,7 @@ Each provides a clear error message: `"No fact_lap rows for season=2024, round=2
 
 ---
 
-## 12. Error Handling Matrix
+## 13. Error Handling Matrix
 
 | Layer | Error | Behavior |
 |-------|-------|----------|
@@ -604,13 +632,13 @@ Each provides a clear error message: `"No fact_lap rows for season=2024, round=2
 
 ---
 
-## 13. API Contract Stability
+## 14. API Contract Stability
 
 The `/scenarios`, `/scenarios/{id}`, and `/scenarios/{id}/decision` endpoints defined in Sprint A are stable and documented in `docs/api_contract.md`. Sprint C does not modify these endpoints. The frontend can be developed in parallel (Sprint E) using mock responses that match the API contract.
 
 ---
 
-## 14. Testing
+## 15. Testing
 
 ### 14.1 JSON Fixtures
 
@@ -623,7 +651,9 @@ tests/fixtures/
 ├── openf1/
 │   ├── 9540_laps.json
 │   ├── 9540_stints.json
-│   └── 9540_weather.json
+│   ├── 9540_pit.json
+│   ├── 9540_weather.json
+│   └── 9540_race_control.json
 └── duckdb/
     └── test_schema.sql
 ```
@@ -643,7 +673,7 @@ Tests never call real Jolpica or OpenF1 endpoints. They load pre-saved JSON fixt
 
 ---
 
-## 15. Rate Limiting
+## 16. Rate Limiting
 
 - Jolpica: `time.sleep(1.0)` between requests
 - OpenF1: no explicit sleep (lenient limits) but cache-first means we almost never make repeat calls
@@ -652,7 +682,7 @@ Tests never call real Jolpica or OpenF1 endpoints. They load pre-saved JSON fixt
 
 ---
 
-## 16. Out of Scope (This Sprint)
+## 17. Out of Scope (This Sprint)
 
 - FastF1 integration: only use existing `ingest/brazil_2024.py` for the pilot race. Full FastF1 normalizer deferred.
 - FP1/FP2/FP3 sessions: Race + Qualifying only. Free practice deferred.
