@@ -21,6 +21,8 @@ DB_PATH = DATA_DIR / "undercut.db"
 ROUND_TO_CIRCUIT: dict[tuple[int, int], str] = {
     (2024, 21): "brazilian grand prix",
     (2023, 15): "singapore grand prix",
+    (2021, 22): "abu dhabi grand prix",
+    (2022, 13): "hungarian grand prix",
 }
 
 
@@ -146,17 +148,15 @@ def cmd_fetch_weekend(args):
                 break
         if meeting_key:
             sessions = openf1.get_sessions(meeting_key)
+            fetched = 0
             for s in sessions:
-                if args.session == "R" and s.get("session_type") == "Race":
-                    session_key = s["session_key"]
-                    openf1.fetch_session(session_key, meeting_key)
-                    print(f"  OpenF1 fetch complete (session_key={session_key})")
-                    break
-                elif args.session == "Q" and "Qualifying" in s.get("session_type", ""):
-                    session_key = s["session_key"]
-                    openf1.fetch_session(session_key, meeting_key)
-                    print(f"  OpenF1 fetch complete (session_key={session_key})")
-                    break
+                s_type = s.get("session_type", "")
+                if s_type == "Race" or "Qualifying" in s_type:
+                    openf1.fetch_session(s["session_key"], meeting_key)
+                    print(f"  OpenF1 fetch complete (session_key={s['session_key']}, type={s_type})")
+                    fetched += 1
+            if fetched == 0:
+                print(f"  OpenF1: no Race/Qualifying sessions found for meeting_key={meeting_key}")
         else:
             print(f"  OpenF1: no meeting found for season={args.season} round={args.round}")
     else:
