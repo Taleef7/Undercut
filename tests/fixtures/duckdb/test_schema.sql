@@ -179,3 +179,83 @@ CREATE TABLE IF NOT EXISTS fact_race_control_event (
     data_version VARCHAR,
     record_hash VARCHAR
 );
+
+CREATE TABLE IF NOT EXISTS race_state_driver_lap_fact (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    lap_number INTEGER,
+    lap_time_ms INTEGER,
+    lap_time_seconds FLOAT,
+    tyre_compound_id INTEGER,
+    compound_label_source VARCHAR,
+    stint_number INTEGER,
+    stint_age_laps INTEGER,
+    laps_remaining INTEGER,
+    is_pit_lap BOOLEAN,
+    rolling_3_lap_avg_ms FLOAT,
+    rolling_5_lap_avg_ms FLOAT,
+    pace_delta_to_field_ms FLOAT,
+    interval_behind_seconds FLOAT,
+    safety_car_active_flag BOOLEAN,
+    rainfall_flag BOOLEAN,
+    track_status_normalized VARCHAR,
+    current_position INTEGER,
+    gap_ahead_seconds FLOAT,
+    gap_behind_seconds FLOAT,
+    driver_ahead_id VARCHAR,
+    driver_behind_id VARCHAR,
+    undercut_threat_flag BOOLEAN,
+    pit_window_open_flag BOOLEAN,
+    computed_at TIMESTAMP,
+    data_version VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS race_state_field_lap (
+    session_id VARCHAR,
+    lap_number INTEGER,
+    leader_driver_id VARCHAR,
+    running_drivers_count INTEGER,
+    field_spread_seconds FLOAT,
+    avg_lap_time_ms FLOAT,
+    median_lap_time_ms FLOAT,
+    fastest_lap_time_ms FLOAT,
+    field_median_rolling_3_lap_ms FLOAT,
+    computed_at TIMESTAMP,
+    data_version VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS feature_pit_decision (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    lap_number INTEGER,
+    stint_age_laps INTEGER,
+    laps_remaining INTEGER,
+    current_position INTEGER,
+    tyre_compound_id INTEGER,
+    gap_ahead_seconds FLOAT,
+    gap_behind_seconds FLOAT,
+    safety_car_active_flag BOOLEAN,
+    rainfall_flag BOOLEAN,
+    track_temperature_c FLOAT,
+    pit_loss_estimate FLOAT,
+    actual_pitted_within_3_laps BOOLEAN,
+    computed_at TIMESTAMP,
+    data_version VARCHAR
+);
+
+CREATE TABLE IF NOT EXISTS feature_undercut_opportunity (
+    session_id VARCHAR,
+    driver_ref VARCHAR,
+    lap_number INTEGER,
+    target_driver_ref VARCHAR,
+    gap_to_target_seconds FLOAT,
+    own_stint_age_laps INTEGER,
+    target_stint_age_laps INTEGER,
+    own_compound_id INTEGER,
+    target_compound_id INTEGER,
+    pit_loss_estimate FLOAT,
+    overtaking_difficulty FLOAT,
+    undercut_succeeded BOOLEAN,
+    computed_at TIMESTAMP,
+    data_version VARCHAR
+);
