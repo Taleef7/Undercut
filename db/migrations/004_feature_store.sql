@@ -1,0 +1,41 @@
+CREATE TABLE IF NOT EXISTS feature_pit_decision (
+    feature_id VARCHAR PRIMARY KEY,
+    session_id VARCHAR,
+    driver_id VARCHAR,
+    lap_number INT,
+    laps_remaining INT,
+    current_position INT,
+    gap_ahead_seconds DOUBLE,
+    gap_behind_seconds DOUBLE,
+    stint_age_laps INT,
+    compound_hardness_order INT,
+    rolling_3_lap_avg_ms DOUBLE,
+    pace_delta_to_field_ms DOUBLE,
+    safety_car_active_flag BOOLEAN,
+    vsc_active_flag BOOLEAN,
+    rainfall_flag BOOLEAN,
+    track_temperature DOUBLE,
+    pit_loss_estimate_seconds DOUBLE,
+    actual_pitted_within_3_laps BOOLEAN,
+    final_position_after_pit INT,
+    feature_version VARCHAR DEFAULT 'v0.1',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS feature_undercut_opportunity (
+    feature_id VARCHAR PRIMARY KEY,
+    session_id VARCHAR,
+    driver_id VARCHAR,
+    target_driver_id VARCHAR,
+    lap_number INT,
+    gap_to_target_seconds DOUBLE,
+    target_stint_age_laps INT,
+    own_stint_age_laps INT,
+    own_compound VARCHAR,
+    target_compound VARCHAR,
+    pit_loss_estimate_seconds DOUBLE,
+    circuit_overtaking_difficulty DOUBLE,
+    undercut_succeeded BOOLEAN,
+    feature_version VARCHAR DEFAULT 'v0.1',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
