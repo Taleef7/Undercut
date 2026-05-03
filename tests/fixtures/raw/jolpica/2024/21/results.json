@@ -1,0 +1,8 @@
+{"MRData": {"RaceTable": {"Races": [{
+    "season": "2024", "round": "21", "raceName": "Brazilian Grand Prix",
+    "Circuit": {"circuitId": "interlagos"},
+    "Results": [
+        {"number": "1", "position": "1", "positionText": "1", "points": "25", "Driver": {"driverId": "max_verstappen", "code": "VER"}, "Constructor": {"constructorId": "red_bull"}, "grid": "17", "laps": "69", "status": "Finished", "Time": {"millis": "63542", "time": "+0:00.000"}},
+        {"number": "44", "position": "2", "positionText": "2", "points": "18", "Driver": {"driverId": "lewis_hamilton", "code": "HAM"}, "Constructor": {"constructorId": "mercedes"}, "grid": "1", "laps": "69", "status": "Finished", "Time": {"millis": "64542", "time": "+1:00.000"}}
+    ]
+}]}}}

@@ -1,0 +1,4 @@
+[
+    {"meeting_key": 47, "session_key": 9540, "date": "2024-11-03T17:10:00Z", "category": "SafetyCar", "flag": "CLEAR", "scope": "Track", "message": "SAFETY CAR DEPLOYED", "lap_number": 2},
+    {"meeting_key": 47, "session_key": 9540, "date": "2024-11-03T17:16:00Z", "category": "SafetyCar", "flag": "CLEAR", "scope": "Track", "message": "SAFETY CAR IN THIS LAP", "lap_number": 5}
+]

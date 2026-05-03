@@ -1,0 +1,4 @@
+[
+    {"meeting_key": 47, "session_key": 9540, "air_temperature": 29.0, "track_temperature": 48.0, "humidity": 72, "rainfall": false, "date": "2024-11-03T17:05:00Z"},
+    {"meeting_key": 47, "session_key": 9540, "air_temperature": 28.5, "track_temperature": 47.0, "humidity": 74, "rainfall": false, "date": "2024-11-03T17:15:00Z"}
+]
