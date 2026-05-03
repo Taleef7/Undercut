@@ -18,6 +18,33 @@ import duckdb
 DATA_DIR = Path(__file__).parent.parent / "data"
 DB_PATH = DATA_DIR / "undercut.db"
 
+ROUND_TO_CIRCUIT: dict[tuple[int, int], str] = {
+    (2024, 21): "brazilian grand prix",
+    (2023, 15): "singapore grand prix",
+}
+
+
+def _resolve_openf1_keys(season: int, round_num: int, session_type: str) -> tuple[int | None, int | None]:
+    """Resolve OpenF1 meeting_key and session_key for a season/round/session."""
+    from ingest.openf1_client import OpenF1Client
+    client = OpenF1Client(data_dir=DATA_DIR)
+    meetings = client.get_meetings(year=season)
+    target_name = ROUND_TO_CIRCUIT.get((season, round_num))
+    if not target_name:
+        return None, None
+    for m in meetings:
+        if m.get("meeting_name", "").lower() == target_name.lower():
+            meeting_key = m["meeting_key"]
+            sessions = client.get_sessions(meeting_key)
+            for s in sessions:
+                s_type = s.get("session_type", "")
+                if session_type == "R" and s_type == "Race":
+                    return meeting_key, s["session_key"]
+                elif session_type == "Q" and "Qualifying" in s_type:
+                    return meeting_key, s["session_key"]
+            return meeting_key, None
+    return None, None
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -109,20 +136,31 @@ def cmd_fetch_weekend(args):
     print("  Jolpica fetch complete")
 
     openf1 = OpenF1Client(data_dir=DATA_DIR)
-    meetings = openf1.get_meetings(year=args.season)
-    meeting_key = None
-    for m in meetings:
-        if m.get("meeting_name", "").lower() == "brazilian grand prix" or args.round == 21:
-            meeting_key = m["meeting_key"]
-            break
-    if meeting_key:
-        sessions = openf1.get_sessions(meeting_key)
-        for s in sessions:
-            if s.get("session_type") == "Race":
-                session_key = s["session_key"]
-                openf1.fetch_session(session_key, meeting_key)
-                print(f"  OpenF1 fetch complete (session_key={session_key})")
+    if args.season >= 2023:
+        meetings = openf1.get_meetings(year=args.season)
+        target_name = ROUND_TO_CIRCUIT.get((args.season, args.round))
+        meeting_key = None
+        for m in meetings:
+            if target_name and m.get("meeting_name", "").lower() == target_name.lower():
+                meeting_key = m["meeting_key"]
                 break
+        if meeting_key:
+            sessions = openf1.get_sessions(meeting_key)
+            for s in sessions:
+                if args.session == "R" and s.get("session_type") == "Race":
+                    session_key = s["session_key"]
+                    openf1.fetch_session(session_key, meeting_key)
+                    print(f"  OpenF1 fetch complete (session_key={session_key})")
+                    break
+                elif args.session == "Q" and "Qualifying" in s.get("session_type", ""):
+                    session_key = s["session_key"]
+                    openf1.fetch_session(session_key, meeting_key)
+                    print(f"  OpenF1 fetch complete (session_key={session_key})")
+                    break
+        else:
+            print(f"  OpenF1: no meeting found for season={args.season} round={args.round}")
+    else:
+        print(f"  OpenF1: skipping (pre-2023, no OpenF1 coverage)")
 
     print("Fetch complete.")
 
@@ -147,16 +185,18 @@ def cmd_normalize(args):
         from ingest.normalize.normalize_weather import normalize_weather
         from ingest.normalize.normalize_race_control import normalize_race_control
 
-        meeting_key = 47
-        session_key = 9540
-
-        n_laps = normalize_laps(DB_PATH, DATA_DIR, meeting_key, session_key)
-        n_stints = normalize_stints(DB_PATH, DATA_DIR, meeting_key, session_key)
-        n_pits = normalize_pit_stops(DB_PATH, DATA_DIR, meeting_key, session_key)
-        n_weather = normalize_weather(DB_PATH, DATA_DIR, meeting_key, session_key)
-        n_rc = normalize_race_control(DB_PATH, DATA_DIR, meeting_key, session_key)
-        print(f"  Laps: {n_laps}, Stints: {n_stints}, Pit stops: {n_pits}, "
-              f"Weather: {n_weather}, Race control: {n_rc}")
+        meeting_key, session_key = _resolve_openf1_keys(args.season, args.round, args.session)
+        if meeting_key is None or session_key is None:
+            print(f"  Warning: Could not resolve OpenF1 keys for season={args.season} round={args.round}. "
+                  f"Only Jolpica normalizers will run.")
+        else:
+            n_laps = normalize_laps(DB_PATH, DATA_DIR, meeting_key, session_key)
+            n_stints = normalize_stints(DB_PATH, DATA_DIR, meeting_key, session_key)
+            n_pits = normalize_pit_stops(DB_PATH, DATA_DIR, meeting_key, session_key)
+            n_weather = normalize_weather(DB_PATH, DATA_DIR, meeting_key, session_key)
+            n_rc = normalize_race_control(DB_PATH, DATA_DIR, meeting_key, session_key)
+            print(f"  Laps: {n_laps}, Stints: {n_stints}, Pit stops: {n_pits}, "
+                  f"Weather: {n_weather}, Race control: {n_rc}")
 
     print("Normalize complete.")
 
@@ -203,11 +243,38 @@ def cmd_validate(args):
     session_id = _get_session_id(args.season, args.round, args.session)
     print(f"Validating session={session_id}")
 
+    import duckdb
+    from ingest.validate.checks import validate_rows
     from ingest.validate.reports import write_report
-    warnings = [f"Validation check placeholder for {session_id}"]
-    report_path = write_report(warnings, [], args.season, args.round, args.session, DATA_DIR)
+
+    TABLE_ORDER = ["fact_session_result", "fact_lap", "fact_stint", "fact_pit_stop",
+                   "fact_weather_sample", "fact_race_control_event"]
+
+    all_warnings: list[str] = []
+    all_errors: list[str] = []
+
+    conn = duckdb.connect(str(DB_PATH))
+    for table in TABLE_ORDER:
+        try:
+            df = conn.execute(f"SELECT * FROM {table} WHERE session_id = ?",
+                              (session_id,)).fetchdf()
+        except Exception:
+            continue
+        if df.empty:
+            continue
+        _, warnings = validate_rows(df, table)
+        for w in warnings:
+            all_warnings.append(f"[{table}] {w}")
+        print(f"  {table}: {len(df)} rows, {len(warnings)} warnings")
+    conn.close()
+
+    report_path = write_report(all_warnings, all_errors, args.season, args.round,
+                               args.session, DATA_DIR)
     print(f"  Report written to {report_path}")
-    print(f"  {len(warnings)} warnings, 0 errors")
+    if all_errors:
+        print(f"  {len(all_warnings)} warnings, {len(all_errors)} errors — FAIL")
+    else:
+        print(f"  {len(all_warnings)} warnings, 0 errors")
 
 
 COMMAND_MAP = {

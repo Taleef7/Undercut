@@ -84,11 +84,28 @@ def check_record_hash_not_null(df: pd.DataFrame) -> list[str]:
 def check_fk_exists(df: pd.DataFrame, col: str, fk_table: str,
                     fk_col: str, db_path) -> list[str]:
     import duckdb
+    ALLOWED_TABLES = {
+        "dim_driver", "dim_constructor", "dim_circuit", "dim_tyre_compound",
+        "dim_season", "dim_meeting", "dim_session", "dim_track_status_code",
+        "fact_lap", "fact_stint", "fact_pit_stop", "fact_session_result",
+        "fact_driver_session_entry", "fact_weather_sample", "fact_race_control_event",
+        "fact_interval_sample", "fact_position_sample",
+        "race_state_driver_lap_fact", "race_state_field_lap",
+    }
+    ALLOWED_COLS = {
+        "driver_id", "driver_ref", "constructor_id", "circuit_id",
+        "tyre_compound_id", "session_id", "lap_number", "stint_number",
+    }
+    if fk_table not in ALLOWED_TABLES:
+        raise ValueError(f"Table '{fk_table}' not in allowlist")
+    if fk_col not in ALLOWED_COLS:
+        raise ValueError(f"Column '{fk_col}' not in allowlist")
+
     warnings = []
     conn = duckdb.connect(str(db_path))
     valid_keys = set(
         row[0] for row in conn.execute(
-            f"SELECT {fk_col} FROM {fk_table}"
+            f'SELECT "{fk_col}" FROM "{fk_table}"'
         ).fetchall()
     )
     conn.close()
