@@ -84,7 +84,7 @@ def score_decision(
             explanation = "Simulation suggests your choice would have cost positions"
     
     # Bonus for reasonable decisions in gray areas
-    if user_action == ACTION_PIT_NOW and context.stint_age > 20:
+    if user_action.startswith("pit_") and context.stint_age > 20:
         score = min(score + 10, 100)
         explanation += " Good timing on the pit stop!"
     

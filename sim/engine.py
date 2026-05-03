@@ -46,7 +46,7 @@ class UndercutEngine:
         )
 
         # 2. Calculate position impact if pitting
-        if decision.action == "pit_now":
+        if decision.action.startswith("pit_"):
             pit_loss = get_pit_loss(self.circuit)
             pos_delta = estimate_pit_delta(
                 current_position=context.position,
@@ -67,7 +67,7 @@ class UndercutEngine:
         risk_score = 0.5 # Neutral
         if decision.action == "stay_out" and context.stint_age > 25:
             risk_score = 0.8 # High risk of cliff
-        elif decision.action == "pit_now" and context.gap_ahead < 5.0:
+        elif decision.action.startswith("pit_") and context.gap_ahead < 5.0:
             risk_score = 0.7 # High risk of rejoining in traffic
 
         return SimResult(
