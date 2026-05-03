@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS fact_pit_stop (
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
 -- Race State Decision Point
 CREATE TABLE IF NOT EXISTS race_state_decision_point (
     decision_point_id VARCHAR PRIMARY KEY,
@@ -83,3 +84,32 @@ CREATE TABLE IF NOT EXISTS race_state_decision_point (
     explanation_long VARCHAR,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Race State Driver Lap View
+-- Flattened view for simulation engine to get current state per driver per lap
+CREATE VIEW IF NOT EXISTS race_state_driver_lap AS
+SELECT 
+    l.session_id,
+    l.lap_number,
+    l.driver_id,
+    d.full_name as driver_name,
+    l.position_at_lap as current_pos,
+    l.lap_time_ms,
+    -- Rolling average pace (last 3 laps) to smooth out anomalies
+    AVG(l.lap_time_ms) OVER (
+        PARTITION BY l.session_id, l.driver_id 
+        ORDER BY l.lap_number 
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ) as rolling_pace_ms,
+    l.compound_id,
+    c.label as compound_label,
+    l.stint_age,
+    l.gap_to_leader_s,
+    l.interval_ahead_s,
+    l.track_status
+FROM 
+    fact_lap l
+JOIN 
+    dim_driver d ON l.driver_id = d.driver_id
+JOIN 
+    dim_compound c ON l.compound_id = c.compound_id;
