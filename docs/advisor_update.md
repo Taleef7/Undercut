@@ -1,9 +1,11 @@
 # Advisor Update: Undercut Strategy Simulator
 
 **Date:** 2026-05-03  
-**Status:** Sprints A+B+C Complete — Full Data Pipeline Built  
-**Working Branch:** `main` (Sprint A+B merged via PR #85, Sprint C PR #86 pending)  
+**Status:** Sprints A+B+C Complete — Full Data Pipeline Built, PR #86 Merged  
+**Working Branch:** `main` (PR #85 and #86 both merged)  
 **Project Timeline:** Compressed 4-week schedule (End of Week 2)
+
+> **Note for advisor:** This document captures the full state after Sprints A+B+C. We are at a decision point for Sprint ordering (D vs E vs parallel). Questions for you are in Section 9.
 
 ---
 
@@ -332,7 +334,7 @@ cd608cf feat: add JolpicaClient with paginated laps, bootstrap, all-time fetches
 
 Pull requests:
 - [PR #85](https://github.com/Taleef7/Undercut/pull/85) — Sprints A+B (merged)
-- [PR #86](https://github.com/Taleef7/Undercut/pull/86) — Sprint C (pending review)
+- [PR #86](https://github.com/Taleef7/Undercut/pull/86) — Sprint C (merged, with review fixes)
 
 ---
 
@@ -346,6 +348,19 @@ Pull requests:
 | pit_ action matching | `sim/engine.py:49,70` + `scoring.py:87` | A+B | Only matched `== "pit_now"` but actions are `pit_now_inter`, `pit_now_hard` | Changed to `.startswith("pit_")` |
 | Missing CORS | `api/main.py` | A | No middleware, frontend could not call API | Added CORSMiddleware for localhost:5173 |
 | fetchall() tuple returns | `api/main.py` (old) | A | Anonymous tuples, no column names | Replaced all with `fetchdf().to_dict(orient="records")` |
+
+### Sprint C PR Review Fixes (Post-Merge)
+
+After merging Sprint C, Codex PR review identified 6 additional issues. All were fixed and pushed:
+
+| Fix | Location | Severity | Issue | Resolution |
+|-----|----------|----------|-------|------------|
+| OpenF1 meeting selection | `ingest/run_pipeline.py` | High | Hardcoded `or args.round == 21` only supported Brazil 2024 | Added `ROUND_TO_CIRCUIT` mapping for all 4 curated races: Brazil 2024 (21), Singapore 2023 (15), Abu Dhabi 2021 (22), Hungary 2022 (13) |
+| Hardcoded OpenF1 keys | `ingest/run_pipeline.py` | High | `meeting_key=47, session_key=9540` hardcoded | Added `_resolve_openf1_keys()` helper that queries OpenF1 dynamically by circuit name |
+| Validation placeholder | `ingest/run_pipeline.py` | High | `cmd_validate` was a stub — no actual checks run | Now iterates fact tables, runs `validate_rows()` on each, writes real per-weekend reports |
+| Decision point idempotency | `ingest/load_decision_points.py` | Medium | `INSERT INTO` would fail on re-run | Changed to `INSERT OR REPLACE INTO` for idempotent loads |
+| Dynamic SQL injection risk | `ingest/validate/checks.py` | Medium | `check_fk_exists()` accepted arbitrary table/column names | Added `ALLOWED_TABLES` and `ALLOWED_COLS` allowlists with `ValueError` for unknown identifiers |
+| API null handling | `api/main.py` | Medium | `int(row["field"])` crashed on NULL gap values | Changed to `int(row.get("field") or default)` pattern throughout endpoints |
 
 ---
 
@@ -371,6 +386,7 @@ Pull requests:
 - Only 3 scenarios (all Brazil 2024: laps 32, 43, 69)
 - No Abu Dhabi 2021, Singapore 2023, or Hungary 2022 scenarios yet
 - Decision types limited to `pit_now_vs_stay_out`, `switch_to_wet`, `extend_to_end` — missing `cover_undercut`, `safety_car_pit`, `late_race_attack`, `defend_position`
+- Note: the pipeline can now ingest any F1 weekend data via `fetch-weekend`, but the YAML scenarios and decision points are still manual curation
 
 ### 7.4 Frontend (Sprint E)
 - No React/Vite app bootstrapped yet
@@ -518,4 +534,74 @@ undercut/
 
 ---
 
-**PR #86 is open at https://github.com/Taleef7/Undercut/pull/86 — ready for review and merge.**
+## 9. Questions for Advisor Feedback
+
+We are at a natural decision point before starting the next sprint. The following questions need your input:
+
+### Q1 — Sprint ordering: D (ML) vs E (Frontend) vs parallel?
+
+The advisor previously recommended parallelizing C and E because the API contract was stable. Now that Sprint C is complete:
+
+- **Sprint D** = Train ML models (pit decision classifier, finish position band). Requires real data in `race_state_driver_lap_fact` to generate training labels.
+- **Sprint E** = Build React frontend (scenario play, result display, scenario selector). Works from `docs/api_contract.md` with mocked API responses.
+- **Sprint G** = Chaos engine modifiers (rain, SC, tire cliff, slow stop, rival pit).
+
+**Options:**
+1. **Parallel D+E** — one agent trains a simple rule-based ML baseline while another builds the frontend. The ML model improves later; the frontend gets a real integration target.
+2. **E first, then D** — build the full frontend first (it can work with mocked responses), then train the model against real data once the UI proves the interaction model.
+3. **D first, then E** — train the model first so the frontend can show real `model_recommendation` and `model_confidence` from day one.
+4. **E + G in parallel, defer D** — build frontend and chaos engine now, leave ML for last (it is the most deferred-able component).
+
+**Our current thinking:** Option 1 (parallel D+E) with a rule-based baseline model (not XGBoost yet) so the frontend shows *something* in the model recommendation badge. The rule-based model uses the same features as the eventual XGBoost model, so upgrading later is a drop-in replacement.
+
+### Q2 — Should we run the pipeline against real data now?
+
+The pipeline is code-complete but has never been run against live APIs. Running it now would:
+- Populate `fact_lap`, `fact_stint`, `fact_pit_stop` with real Brazil 2024 data
+- Populate `race_state_driver_lap_fact` with ~1,400 rows (70 laps × 20 drivers)
+- Validate the end-to-end pipeline works in production
+- Provide real training data for Sprint D
+
+But it also risks hitting rate limits, discovering schema mismatches, or finding bugs in the live path that our fixtures didn't catch.
+
+**Question:** Should we run `uv run python -m ingest.run_pipeline fetch-weekend --season 2024 --round 21` now, or wait until after the frontend is built and we can do a full integration test?
+
+### Q3 — Frontend: should we bootstrap the web app now or wait?
+
+The AGENTS.md specifies: Vite + React + TypeScript + Tailwind + shadcn/ui + Recharts.
+
+- The `web/` directory does not exist yet.
+- `package.json`, `vite.config.ts`, `tailwind.config.js`, and shadcn/ui initialization are all unstarted.
+- The API contract in `docs/api_contract.md` is stable and sufficient for frontend development.
+
+**Question:** Is now the right time to bootstrap the frontend, or should we wait for any reason? Also: should the frontend agent work from a separate git worktree (like `feature/sprint-e`) or directly on `main`?
+
+### Q4 — ML model scope for Sprint D
+
+The spec says: "Preferred model order: rule-based baseline → logistic regression → random forest → XGBoost."
+
+For Sprint D, we have two tasks:
+1. **Pit decision** — binary: should this driver pit in the next 1–3 laps?
+2. **Finish position band** — multiclass: given current race state, which position band will they finish in?
+
+**Options:**
+1. Build both rule-based baselines now (simple if-then rules using stint age, compound, gap, laps remaining)
+2. Build one rule-based baseline (pit decision only) and one logistic regression (finish position)
+3. Build both as logistic regression models with scikit-learn
+4. Skip ML entirely for now and keep `model_recommendation` as a hardcoded heuristic
+
+**Our current thinking:** Option 1 — rule-based baselines for both. They are deterministic, explainable, require no training data volume, and provide a foundation to upgrade later. The `model_confidence` can be derived from how many rules fired.
+
+### Q5 — Should we close out remaining GitHub issues?
+
+We have 30 open issues organized by milestone:
+- **Week 3 — Frontend (#55-#68):** 14 issues, all unstarted
+- **Week 4 — Chaos + Deploy + Polish (#69-#84):** 16 issues, all unstarted
+
+All 16 closed issues are from Week 1-2 work that is now complete.
+
+**Question:** Should we close the open issues that represent completed backend work (e.g., API endpoints, scoring, schema), or leave them open until the frontend consumes them? Currently none of the open issues describe completed work — they all describe future frontend/chaos/deploy tasks.
+
+---
+
+**PR #86 merged at https://github.com/Taleef7/Undercut/pull/86. All sprints A+B+C complete.**
