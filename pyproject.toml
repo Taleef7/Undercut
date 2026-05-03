@@ -5,7 +5,7 @@ description = "Undercut - F1 Strategy Simulator"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "fastf1>=6.0.0",
+    "fastf1>=3.8.3,<4.0.0",
     "pandas>=2.0.0",
     "pyarrow>=14.0.0",
     "duckdb>=0.10.0",
@@ -29,8 +29,8 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-cache = true
+[tool.hatch.build.targets.wheel]
+packages = ["sim", "api", "ingest"]
 
 [tool.ruff]
 line-length = 100
@@ -41,3 +41,6 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

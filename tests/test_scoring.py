@@ -1,7 +1,7 @@
 from sim.scoring import ScenarioContext, StrategyDecision, score_decision
 
 
-def test_score_decision_sets_model_recommendation_when_matching_historical() -> None:
+def test_score_decision_returns_model_recommendation_without_nameerror() -> None:
     context = ScenarioContext(
         driver="VER",
         lap=32,
