@@ -1,0 +1,5 @@
+{"MRData": {"CircuitTable": {"Circuits": [
+    {"circuitId": "interlagos", "circuitName": "Autodromo Jose Carlos Pace", "Location": {"locality": "Sao Paulo", "country": "Brazil", "lat": "-23.7036", "long": "-46.6997"}},
+    {"circuitId": "monaco", "circuitName": "Circuit de Monaco", "Location": {"locality": "Monte-Carlo", "country": "Monaco", "lat": "43.7347", "long": "7.4206"}},
+    {"circuitId": "silverstone", "circuitName": "Silverstone Circuit", "Location": {"locality": "Silverstone", "country": "UK", "lat": "52.0786", "long": "-1.0169"}}
+]}}}
