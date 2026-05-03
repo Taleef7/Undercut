@@ -45,6 +45,7 @@ def score_decision(
     """
     user_action = decision.action
     historical_action = historical_decision
+    sim_position = simulated_positions.get(user_action, context.position)
     
     # Basic scoring logic
     score = 0
@@ -58,8 +59,6 @@ def score_decision(
         explanation = "You made the same call as the real team!"
     else:
         # Check simulated outcome
-        sim_position = simulated_positions.get(user_action, context.position)
-        
         if sim_position < context.position:
             score = 90
             grade = "Strong call"
