@@ -4,6 +4,17 @@ Simulator scoring - score user decisions against historical + simulated outcomes
 from dataclasses import dataclass
 from typing import Optional
 
+ACTION_PIT_NOW = "pit_now"
+ACTION_STAY_OUT = "stay_out"
+ACTION_EXTEND_STINT = "extend_stint"
+
+GRADE_MASTERFUL = "Masterful"
+GRADE_STRONG_CALL = "Strong call"
+GRADE_INSPIRED_CALL = "Inspired call"
+GRADE_RISKY = "Risky"
+GRADE_POOR_CALL = "Poor call"
+GRADE_OFF_THE_WALL = "Off the wall"
+
 
 @dataclass
 class StrategyDecision:
@@ -29,8 +40,8 @@ def score_decision(
     decision: StrategyDecision,
     context: ScenarioContext,
     historical_decision: str,
-    simulated_positions: dict
-) -> dict:
+    simulated_positions: dict[str, int],
+) -> dict[str, object]:
     """
     Score a user decision.
     
@@ -49,35 +60,35 @@ def score_decision(
     
     # Basic scoring logic
     score = 0
-    grade = "Poor"
+    grade = GRADE_POOR_CALL
     explanation = ""
     
     # Match historical?
     if user_action == historical_action:
         score = 75
-        grade = "Solid call"
+        grade = GRADE_STRONG_CALL
         explanation = "You made the same call as the real team!"
     else:
         # Check simulated outcome
         if sim_position < context.position:
             score = 90
-            grade = "Strong call"
+            grade = GRADE_INSPIRED_CALL
             explanation = f"Simulation suggests you could have gained {context.position - sim_position} position(s)"
         elif sim_position == context.position:
             score = 60
-            grade = "Risky"
+            grade = GRADE_RISKY
             explanation = "Simulation suggests similar outcome, but risky given the conditions"
         else:
             score = 40
-            grade = "Poor call"
+            grade = GRADE_POOR_CALL
             explanation = "Simulation suggests your choice would have cost positions"
     
     # Bonus for reasonable decisions in gray areas
-    if user_action == "pit_now" and context.stint_age > 20:
+    if user_action == ACTION_PIT_NOW and context.stint_age > 20:
         score = min(score + 10, 100)
         explanation += " Good timing on the pit stop!"
     
-    if user_action == "stay_out" and context.stint_age < 10:
+    if user_action == ACTION_STAY_OUT and context.stint_age < 10:
         score = max(score - 10, 0)
         explanation += " Tires still had life, pitting early was aggressive."
     
@@ -86,19 +97,19 @@ def score_decision(
         "grade": grade,
         "explanation": explanation,
         "historical_decision": historical_action,
-        "model_recommendation": "pit_now" if sim_position < context.position else "stay_out",
+        "model_recommendation": ACTION_PIT_NOW if sim_position < context.position else ACTION_STAY_OUT,
     }
 
 
 def get_grade_label(score: int) -> str:
     """Get grade label from score."""
     if score >= 85:
-        return "Masterful"
+        return GRADE_MASTERFUL
     elif score >= 70:
-        return "Strong"
+        return GRADE_STRONG_CALL
     elif score >= 50:
-        return "Solid"
+        return GRADE_INSPIRED_CALL
     elif score >= 30:
-        return "Risky"
+        return GRADE_RISKY
     else:
-        return "Poor"
+        return GRADE_OFF_THE_WALL
