@@ -167,7 +167,7 @@ export default function DecisionResult() {
             variant="outline"
             className="flex-1"
             onClick={() =>
-              navigate(`/scenario/${scenario.id}`, {
+              navigate(`/scenario/${scenario.decision_point_id}`, {
                 state: { disabledAction: response.user_action },
               })
             }
