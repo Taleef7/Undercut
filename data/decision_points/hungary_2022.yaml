@@ -1,0 +1,117 @@
+- id: "hungary_2022_lap38"
+  session_id: "R"
+  driver_id: "SAI"
+  lap_number: 38
+  decision_type: "pit_now_vs_stay_out"
+  scenario_title: "Ferrari's Strategy Blunder — Sainz at the Hungaroring"
+  scenario_description: |
+    Lap 38 of the 2022 Hungarian GP. You're Carlos Sainz in P3 on medium
+    tires, 21 laps old. Leclerc leads on 21-lap mediums. Russell is P2.
+    Ferrari asks you to pit for fresh hard tires with 32 laps to go.
+    Do you pit and concede track position, or stay out and extend?
+  available_actions:
+    - "pit_hard"
+    - "stay_out_extend"
+    - "ask_for_undercut"
+  actual_decision: "pit_hard"
+  actual_outcome_summary: "Sainz pitted, rejoined P4, stuck behind slower cars, finished P4"
+  explanation_short: "Ferrari's call was too conservative — track position was more valuable at Hungary"
+  explanation_long: |
+    Ferrari's decision to pit Sainz from P3 was widely criticized as overly
+    conservative. With 32 laps remaining, the hard tire was marginal on a
+    one-stop strategy, and the time lost in pit lane (20+ seconds) was never
+    recovered at the Hungaroring where overtaking is difficult. Leclerc and
+    Russell both stayed out longer and maintained position. Sainz's pace on
+    fresh hards was strong but he was trapped behind slower cars, unable to
+    make progress.
+  race_state:
+    current_position: 3
+    gap_ahead_seconds: 2.0
+    gap_behind_seconds: 4.0
+    compound: "medium"
+    stint_age_laps: 21
+    laps_remaining: 32
+    track_temperature_c: 43
+    air_temperature_c: 30
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false
+
+- id: "hungary_2022_lap47"
+  session_id: "R"
+  driver_id: "LEC"
+  lap_number: 47
+  decision_type: "extend_to_end"
+  scenario_title: "Leclerc's Tire Gamble — Can He Make It?"
+  scenario_description: |
+    Lap 47. You're Charles Leclerc in P4 on hard tires, 8 laps old. Hamilton
+    leads on 21-lap mediums. Sainz is behind you on 9-lap hards and catching.
+    23 laps to go at the Hungaroring. Ferrari asks: push to maintain gap to
+    Sainz, or conserve tires and accept the position loss?
+  available_actions:
+    - "push_maintain_gap"
+    - "conserve_tires"
+    - "ask_team_for_status"
+  actual_decision: "push_maintain_gap"
+  actual_outcome_summary: "Leclerc pushed too hard, tires degraded, Sainz passed him for P3"
+  explanation_short: "Pushing destroyed the hard tires — conservation was the better strategy"
+  explanation_long: |
+    Leclerc's decision to push flat-out to keep Sainz behind was strategically
+    wrong. The hard compound at the Hungaroring had a narrow optimal window,
+    and pushing beyond it caused rapid degradation. Sainz, on fresher hards
+    of similar age, was always going to catch and pass. A better approach
+    would have been to conserve early, accept the position loss, and preserve
+    tire life for a potential late opportunity that never materialized.
+  race_state:
+    current_position: 4
+    gap_ahead_seconds: 6.0
+    gap_behind_seconds: 1.5
+    compound: "hard"
+    stint_age_laps: 8
+    laps_remaining: 23
+    track_temperature_c: 42
+    air_temperature_c: 29
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false
+
+- id: "hungary_2022_lap51"
+  session_id: "R"
+  driver_id: "VER"
+  lap_number: 51
+  decision_type: "late_race_attack"
+  scenario_title: "Verstappen's Charge — P10 to P1"
+  scenario_description: |
+    Lap 51. You're Max Verstappen, starting from P10 due to a penalty, now
+    leading the race on medium tires, 13 laps old. Hamilton is 3 seconds
+    behind on 21-lap mediums. 19 laps to go. Red Bull asks: do you push
+    to build a gap now, or manage tires for the final stint?
+  available_actions:
+    - "push_now_build_gap"
+    - "manage_charge"
+    - "conserve_for_final_laps"
+  actual_decision: "push_now_build_gap"
+  actual_outcome_summary: "Verstappen pushed relentlessly, built a 10-second gap, won the race"
+  explanation_short: "With fresher tires and clear track, the attack had to happen immediately"
+  explanation_long: |
+    Verstappen's charge from P10 to P1 at Hungary 2022 was one of the greatest
+    drives of the season. On fresher medium tires with clear track ahead, he
+    had a massive pace advantage. Red Bull correctly identified that he needed
+    to build the gap immediately before tire degradation equalized the field.
+    By pushing flat-out for 5 laps, he built an insurmountable lead that
+    Hamilton could never close. A masterclass in aggressive racecraft.
+  race_state:
+    current_position: 1
+    gap_ahead_seconds: null
+    gap_behind_seconds: 3.0
+    compound: "medium"
+    stint_age_laps: 13
+    laps_remaining: 19
+    track_temperature_c: 41
+    air_temperature_c: 28
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false
