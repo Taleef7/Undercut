@@ -41,6 +41,7 @@ class ScenarioContext:
     modifier_pit_loss_delta: float = 0.0
     modifier_stint_age_delta: int = 0
     opponent_fresher_tires: bool = False
+    circuit: str = "interlagos"
 
 
 def score_decision(
@@ -90,12 +91,14 @@ def score_decision(
             grade = GRADE_POOR_CALL
             explanation = "Simulation suggests your choice would have cost positions"
     
+    effective_stint_age = context.stint_age + getattr(context, 'modifier_stint_age_delta', 0)
+
     # Bonus for reasonable decisions in gray areas
-    if user_action.startswith("pit_") and context.stint_age > 20:
+    if user_action.startswith("pit_") and effective_stint_age > 20:
         score = min(score + 10, 100)
         explanation += " Good timing on the pit stop!"
-    
-    if user_action == ACTION_STAY_OUT and context.stint_age < 10:
+
+    if user_action == ACTION_STAY_OUT and effective_stint_age < 10:
         score = max(score - 10, 0)
         explanation += " Tires still had life, pitting early was aggressive."
     

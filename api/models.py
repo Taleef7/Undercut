@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict, Any
+from enum import Enum
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -59,6 +60,21 @@ class DecisionRequest(BaseModel):
     compound: Optional[str] = None
 
 
+class ModifierType(str, Enum):
+    safety_car = "safety_car"
+    vsc = "vsc"
+    rain_starts = "rain_starts"
+    tire_cliff_now = "tire_cliff_now"
+    slow_pit_stop = "slow_pit_stop"
+    rival_pits_this_lap = "rival_pits_this_lap"
+    red_flag = "red_flag"
+
+
+class ChaosModifierItem(BaseModel):
+    modifier_type: ModifierType
+    modifier_value: float = 0.0
+
+
 class ChaosModifierRequest(BaseModel):
     action: str
-    modifiers: List[Dict[str, Any]] = []
+    modifiers: List[ChaosModifierItem] = []

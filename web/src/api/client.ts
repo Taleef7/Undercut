@@ -54,14 +54,25 @@ export interface DecisionResponse {
 
 export async function getScenarios(): Promise<ScenarioSummary[]> {
   const res = await fetch(`${API_BASE}/scenarios`);
-  if (!res.ok) throw new Error(`Failed to fetch scenarios: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 
 export async function getScenario(id: string): Promise<ScenarioDetail> {
   const res = await fetch(`${API_BASE}/scenarios/${id}`);
-  if (!res.ok) throw new Error(`Failed to fetch scenario: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
+}
+
+export interface ChaosModifier {
+  modifier_type: string;
+  modifier_value?: number;
 }
 
 export async function submitDecision(id: string, action: string): Promise<DecisionResponse> {
@@ -70,6 +81,26 @@ export async function submitDecision(id: string, action: string): Promise<Decisi
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action }),
   });
-  if (!res.ok) throw new Error(`Failed to submit decision: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+export async function submitChaosDecision(
+  id: string,
+  action: string,
+  modifiers: ChaosModifier[]
+): Promise<DecisionResponse> {
+  const res = await fetch(`${API_BASE}/scenarios/${id}/chaos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, modifiers }),
+  });
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
 }

@@ -15,12 +15,15 @@ from api.models import (
     SimulationSummary,
     ChaosModifierRequest,
 )
-
 app = FastAPI(title="Undercut API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://undercut.vercel.app",
+        "https://*.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -154,6 +157,9 @@ def submit_decision(decision_id: str, request: DecisionRequest):
         row["actual_decision"],
     )
 
+    tire_risk = "high" if context.stint_age > 25 else "medium" if context.stint_age > 18 else "low"
+    track_position_risk = "high" if sim_result.risk_score > 0.7 else "medium" if sim_result.risk_score > 0.4 else "low"
+
     return DecisionResponse(
         scenario_id=row["decision_point_id"],
         user_action=request.action,
@@ -167,6 +173,8 @@ def submit_decision(decision_id: str, request: DecisionRequest):
             expected_position=sim_result.expected_position,
             expected_finish_position_band=score_data.get("expected_finish_position_band"),
             risk_score=sim_result.risk_score,
+            tire_risk=tire_risk,
+            track_position_risk=track_position_risk,
         ),
         explanation=score_data["explanation"],
         tradeoffs=[],
@@ -210,36 +218,32 @@ def submit_chaos_decision(decision_id: str, request: ChaosModifierRequest):
         gap_ahead=float(gap_ahead),
         gap_behind=float(gap_behind),
         laps_remaining=int(row.get("laps_remaining") or 0),
-        safety_car_active=bool(row.get("safety_car_active", False)),
-        virtual_safety_car_active=bool(row.get("virtual_safety_car_active", False)),
-        rainfall=bool(row.get("rainfall", False)),
-        track_status=str(row.get("track_status", "green") or "green"),
+        safety_car_active=row.get("safety_car_active") or False,
+        virtual_safety_car_active=row.get("virtual_safety_car_active") or False,
+        rainfall=row.get("rainfall") or False,
+        track_status=row.get("track_status") or "green",
+        circuit="interlagos",
     )
 
-    # Apply chaos modifiers
-    chaos_engine = ChaosEngine(circuit="interlagos")
-    modifiers = [
-        ChaosModifier(
-            modifier_type=m.get("modifier_type", ""),
-            modifier_value=float(m.get("modifier_value", 0.0)),
-        )
-        for m in request.modifiers
-    ]
-    modified_context = chaos_engine.apply_modifiers(context, modifiers)
+    chaos_engine = ChaosEngine()
+    modifiers = [ChaosModifier(**m.model_dump()) for m in request.modifiers]
+    context = chaos_engine.apply_modifiers(context, modifiers)
 
-    # Run simulation with modified context
     engine = UndercutEngine(circuit="interlagos")
     sim_result = engine.simulate_decision(
         StrategyDecision(action=request.action, compound=None),
-        modified_context,
+        context,
         row["actual_decision"],
     )
 
     score_data = engine.evaluate_strategy(
         StrategyDecision(action=request.action, compound=None),
-        modified_context,
+        context,
         row["actual_decision"],
     )
+
+    tire_risk = "high" if context.stint_age > 25 else "medium" if context.stint_age > 18 else "low"
+    track_position_risk = "high" if sim_result.risk_score > 0.7 else "medium" if sim_result.risk_score > 0.4 else "low"
 
     return DecisionResponse(
         scenario_id=row["decision_point_id"],
@@ -254,6 +258,8 @@ def submit_chaos_decision(decision_id: str, request: ChaosModifierRequest):
             expected_position=sim_result.expected_position,
             expected_finish_position_band=score_data.get("expected_finish_position_band"),
             risk_score=sim_result.risk_score,
+            tire_risk=tire_risk,
+            track_position_risk=track_position_risk,
         ),
         explanation=score_data["explanation"],
         tradeoffs=[],
