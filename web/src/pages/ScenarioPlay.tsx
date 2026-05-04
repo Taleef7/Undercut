@@ -100,7 +100,15 @@ export default function ScenarioPlay() {
     );
   }
 
-  const rs = scenario.race_state;
+  const rs = {
+    current_position: scenario.current_position,
+    compound: scenario.compound,
+    laps_remaining: scenario.laps_remaining,
+    stint_age_laps: scenario.stint_age_laps,
+    track_status: scenario.track_status,
+    weather: scenario.weather,
+    temperature_c: scenario.temperature_c,
+  };
   const totalLaps = scenario.lap_number + rs.laps_remaining;
   const compoundColor = COMPOUND_COLORS[rs.compound.toLowerCase()] ?? "bg-gray-500";
   const cliffWarning =
