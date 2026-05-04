@@ -18,13 +18,16 @@ from api.models import (
 )
 app = FastAPI(title="Undercut API")
 
+# CORS: allow comma-separated origins via env var, fallback to wildcard in production
+_cors_origins_str = os.environ.get("CORS_ORIGINS", "")
+if _cors_origins_str:
+    ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_str.split(",") if o.strip()]
+else:
+    ALLOWED_ORIGINS = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "https://undercut.vercel.app",
-        "https://*.vercel.app",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
