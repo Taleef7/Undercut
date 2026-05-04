@@ -33,6 +33,8 @@ ENV/
 *.duckdb.shm
 data/cache/
 data/raw/
+data/undercut.db
+data/validation_report_*.json
 *.parquet
 *.csv
 
