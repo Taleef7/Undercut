@@ -1,0 +1,113 @@
+- id: "singapore_2023_lap40"
+  session_id: "R"
+  driver_id: "ALO"
+  lap_number: 40
+  decision_type: "extend_to_end"
+  scenario_title: "Defend on Dead Tires — Alonso's Gamble"
+  scenario_description: |
+    Lap 40 of the 2023 Singapore GP. You're Fernando Alonso in P8 on hard
+    tires that are 20 laps old. Perez just pitted for fresh mediums and is
+    closing fast behind you. 22 laps to go at Marina Bay where overtaking is
+    nearly impossible. Do you pit and concede position, or extend the stint
+    and pray the tires hold?
+  available_actions:
+    - "pit_medium"
+    - "stay_out_defend"
+    - "ask_team_for_gap"
+  actual_decision: "pit_medium"
+  actual_outcome_summary: "Alonso pitted, rejoined P8, held position to the end"
+  explanation_short: "The hards were past their window — pitting was the only logical call"
+  explanation_long: |
+    Alonso's Aston Martin made the right call to pit for mediums. The hard
+    compound at Singapore was well past its optimal window after 20 laps,
+    and lap times were deteriorating. Staying out would have meant being
+    a sitting duck for Perez on fresh tires. While the pit stop cost track
+    position, it preserved points and prevented a costly defense that would
+    have destroyed the tires completely.
+  race_state:
+    current_position: 8
+    gap_ahead_seconds: 2.5
+    gap_behind_seconds: 1.8
+    compound: "hard"
+    stint_age_laps: 20
+    laps_remaining: 22
+    track_temperature_c: 35
+    air_temperature_c: 29
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false
+
+- id: "singapore_2023_lap43"
+  session_id: "R"
+  driver_id: "NOR"
+  lap_number: 43
+  decision_type: "pit_now_vs_stay_out"
+  scenario_title: "Norris's Window — Pit for Fastest Lap?"
+  scenario_description: |
+    Lap 43. You're Lando Norris in P3 on hard tires, 23 laps old. Sainz leads
+    by 8 seconds. Russell is 12 seconds behind in P4. McLaren asks: pit for
+    fresh softs to hunt fastest lap and risk P3, or stay out and consolidate?
+  available_actions:
+    - "pit_softs_fastest_lap"
+    - "stay_out_consolidate"
+  actual_decision: "stay_out_consolidate"
+  actual_outcome_summary: "Norris stayed out, finished P2 after Russell retired"
+  explanation_short: "P3 was secure — no need to risk everything for a fastest lap"
+  explanation_long: |
+    With a comfortable gap to P4 and 19 laps remaining, Norris's podium was
+    never under threat. A pit stop at Singapore costs 22+ seconds, meaning
+    he would have needed to make up the gap AND set a fastest lap on a track
+    where overtaking is nearly impossible. The conservative call preserved
+    a solid result in a race where McLaren had strong pace.
+  race_state:
+    current_position: 3
+    gap_ahead_seconds: 8.0
+    gap_behind_seconds: 12.0
+    compound: "hard"
+    stint_age_laps: 23
+    laps_remaining: 19
+    track_temperature_c: 35
+    air_temperature_c: 29
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false
+
+- id: "singapore_2023_lap20"
+  session_id: "R"
+  driver_id: "RUS"
+  lap_number: 20
+  decision_type: "safety_car_pit"
+  scenario_title: "The Rain Gamble — Safety Car at Marina Bay"
+  scenario_description: |
+    Lap 20. The safety car is deployed for track surface issues. You're George
+    Russell in P3 on medium tires, 20 laps old. Some drivers are pitting for
+    fresh rubber. The track is tricky but drying. Mercedes asks: pit for fresh
+    hards under this SC, or stay out and maintain track position?
+  available_actions:
+    - "pit_hards"
+    - "stay_out"
+    - "wait_one_lap"
+  actual_decision: "pit_hards"
+  actual_outcome_summary: "Russell pitted for hards, rejoined P3, eventually won the race"
+  explanation_short: "Free pit stop under SC — track position was preserved"
+  explanation_long: |
+    Russell's decision to pit under the safety car was the correct strategic
+    call. At Singapore, a pit stop costs 22+ seconds, but under the safety car
+    the field is bunched and the effective loss is minimal. Russell maintained
+    P3 and gained fresher tires for the long stint ahead. This stop set up
+    his race-winning strategy as others struggled with tire degradation later.
+  race_state:
+    current_position: 3
+    gap_ahead_seconds: 3.0
+    gap_behind_seconds: 2.0
+    compound: "medium"
+    stint_age_laps: 20
+    laps_remaining: 42
+    track_temperature_c: 35
+    air_temperature_c: 29
+    rainfall: false
+    track_status: "safety_car"
+    safety_car_active: true
+    virtual_safety_car_active: false

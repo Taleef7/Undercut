@@ -1,0 +1,115 @@
+- id: "abu_dhabi_2021_lap53"
+  session_id: "R"
+  driver_id: "VER"
+  lap_number: 53
+  decision_type: "safety_car_pit"
+  scenario_title: "Safety Car Gamble — The Championship on the Line"
+  scenario_description: |
+    Lap 53 of the 2021 Abu Dhabi GP. Latifi crashed, the safety car is deployed.
+    You're Verstappen in P2, 5 laps to go. Hamilton leads on 43-lap-old hard tires.
+    You have 17-lap-old hards. Red Bull asks: pit for fresh softs and surrender P2,
+    or stay out and hope the race finishes under SC?
+  available_actions:
+    - "pit_softs"
+    - "stay_out"
+  actual_decision: "pit_softs"
+  actual_outcome_summary: "VER pitted for softs, lapped cars allowed through, passed HAM on final lap to win WDC"
+  explanation_short: "The gamble of the century — fresh softs vs 43-lap hards on a one-lap restart"
+  explanation_long: |
+    Red Bull rolled the dice. Pitting from P2 meant Verstappen would restart
+    directly behind Hamilton, but on tires that were 40+ laps fresher. The
+    controversial decision to allow only select lapped cars through created
+    a one-lap shootout. Verstappen's soft tires gave him the grip to draft
+    Hamilton down the back straight and pass into Turn 5, winning his first
+    World Championship in the most dramatic finish in F1 history.
+  race_state:
+    current_position: 2
+    gap_ahead_seconds: 0.5
+    gap_behind_seconds: 18.0
+    compound: "hard"
+    stint_age_laps: 17
+    laps_remaining: 5
+    track_temperature_c: 26
+    air_temperature_c: 24
+    rainfall: false
+    track_status: "safety_car"
+    safety_car_active: true
+    virtual_safety_car_active: false
+
+- id: "abu_dhabi_2021_lap56"
+  session_id: "R"
+  driver_id: "HAM"
+  lap_number: 56
+  decision_type: "defend_position"
+  scenario_title: "Defend the Lead — One Lap for the Title"
+  scenario_description: |
+    Lap 56. The safety car is in this lap. You're Hamilton leading the race
+    and the World Championship, but Verstappen is behind you on brand new soft
+    tires. Your hard tires are 42 laps old. One lap shootout for everything.
+    How do you defend?
+  available_actions:
+    - "defend_aggressive"
+    - "defend_clean"
+    - "concede_position"
+  actual_decision: "defend_clean"
+  actual_outcome_summary: "HAM defended cleanly but was overtaken at Turn 5, finished P2, lost WDC"
+  explanation_short: "With 42-lap hards vs fresh softs, defense was nearly impossible"
+  explanation_long: |
+    Mercedes kept Hamilton out during the safety car, gambling that the race
+    would finish under yellows. When the race director allowed lapped cars to
+    pass and restart, Hamilton faced an impossible task. His 42-lap hard tires
+    had no temperature or grip against Verstappen's new softs. Even aggressive
+    weaving on the formation lap couldn't generate enough heat. A legendary
+    season ended in heartbreak.
+  race_state:
+    current_position: 1
+    gap_ahead_seconds: null
+    gap_behind_seconds: 0.8
+    compound: "hard"
+    stint_age_laps: 42
+    laps_remaining: 2
+    track_temperature_c: 26
+    air_temperature_c: 24
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false
+
+- id: "abu_dhabi_2021_lap14"
+  session_id: "R"
+  driver_id: "PER"
+  lap_number: 14
+  decision_type: "cover_undercut"
+  scenario_title: "The Rear Gunner — Perez Holds the Line"
+  scenario_description: |
+    Lap 14. You're Sergio Perez in P2 on soft tires, 14 laps old. Hamilton
+    leads on mediums. Your teammate Verstappen is behind in P4 after an early
+    stop for hards. Verstappen is catching fast. Do you push to maintain gap
+    to Hamilton, or pit early to cover Max's strategy?
+  available_actions:
+    - "pit_cover"
+    - "push_stay_out"
+    - "back_off"
+  actual_decision: "push_stay_out"
+  actual_outcome_summary: "Perez held up Hamilton for 10 laps, allowing VER to close from 9s to nothing"
+  explanation_short: "Perez's defense was crucial — he sacrificed his race for the team's championship"
+  explanation_long: |
+    Perez chose to stay out and defend against Hamilton rather than pitting
+    for fresh tires. Over the next 10 laps, he backed Hamilton into Verstappen
+    with masterful defensive driving, cutting a 9-second gap to zero. This
+    strategic sacrifice — giving up his own race position — was the unsung
+    hero moment that set up the dramatic finale. Without Perez's defense,
+    Hamilton would have built an unassailable lead.
+  race_state:
+    current_position: 2
+    gap_ahead_seconds: 1.5
+    gap_behind_seconds: 3.0
+    compound: "soft"
+    stint_age_laps: 14
+    laps_remaining: 44
+    track_temperature_c: 26
+    air_temperature_c: 24
+    rainfall: false
+    track_status: "green"
+    safety_car_active: false
+    virtual_safety_car_active: false

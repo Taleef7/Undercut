@@ -17,24 +17,12 @@ def find_decision_points_dir() -> Path | None:
         ROOT / "data" / "decision_points",
         Path("/app") / "data" / "decision_points",
         Path("/app") / "db" / "seeds",
-        Path.cwd() / "data" / "decision_points",
-        Path("data") / "decision_points",
+        SEEDS_DIR,
     ]
     
     for candidate in candidates:
-        print(f"  Checking: {candidate} (exists={candidate.exists()})")
         if candidate.exists() and candidate.is_dir():
             return candidate
-    
-    # Debug: list contents of parent dirs
-    for parent in [ROOT, Path("/app"), Path.cwd()]:
-        if parent.exists():
-            print(f"  Contents of {parent}:")
-            try:
-                for item in sorted(parent.iterdir()):
-                    print(f"    {item.name} {'(dir)' if item.is_dir() else '(file)'}")
-            except Exception as e:
-                print(f"    Error: {e}")
     
     return None
 
@@ -71,12 +59,10 @@ def load_all_decision_points() -> int:
     """Load all decision point YAML files into the DB."""
     dp_dir = find_decision_points_dir()
     if dp_dir is None:
-        print("  WARNING: Decision points directory not found in any location")
+        print("  WARNING: Decision points directory not found")
         return 0
 
-    print(f"  Found decision points dir: {dp_dir}")
     yaml_files = sorted(dp_dir.glob("*.yaml"))
-    print(f"  YAML files found: {[f.name for f in yaml_files]}")
 
     if not yaml_files:
         print(f"  WARNING: No YAML files found in {dp_dir}")
