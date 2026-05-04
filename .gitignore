@@ -24,6 +24,9 @@ ENV/
 *.swo
 *~
 
+# Python version (local dev only; Vercel auto-detects Python from this)
+.python-version
+
 # Worktrees
 .worktrees/
 
@@ -47,3 +50,4 @@ data/validation_report_*.json
 # OS
 .DS_Store
 Thumbs.db
+.vercel
