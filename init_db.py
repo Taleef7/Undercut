@@ -9,21 +9,34 @@ ROOT = Path(__file__).parent
 DB_PATH = Path(os.environ.get("DUCKDB_PATH", ROOT / "data" / "undercut.db"))
 MIGRATIONS_DIR = ROOT / "db" / "migrations"
 SEEDS_DIR = ROOT / "db" / "seeds"
-DECISION_POINTS_DIR = ROOT / "data" / "decision_points"
 
 
-def db_exists_with_data() -> bool:
-    if not DB_PATH.exists():
-        return False
-    try:
-        conn = duckdb.connect(str(DB_PATH))
-        result = conn.execute(
-            "SELECT COUNT(*) FROM race_state_decision_point"
-        ).fetchone()
-        conn.close()
-        return result[0] > 0
-    except Exception:
-        return False
+def find_decision_points_dir() -> Path | None:
+    """Search for decision points directory in multiple locations."""
+    candidates = [
+        ROOT / "data" / "decision_points",
+        Path("/app") / "data" / "decision_points",
+        Path("/app") / "db" / "seeds",
+        Path.cwd() / "data" / "decision_points",
+        Path("data") / "decision_points",
+    ]
+    
+    for candidate in candidates:
+        print(f"  Checking: {candidate} (exists={candidate.exists()})")
+        if candidate.exists() and candidate.is_dir():
+            return candidate
+    
+    # Debug: list contents of parent dirs
+    for parent in [ROOT, Path("/app"), Path.cwd()]:
+        if parent.exists():
+            print(f"  Contents of {parent}:")
+            try:
+                for item in sorted(parent.iterdir()):
+                    print(f"    {item.name} {'(dir)' if item.is_dir() else '(file)'}")
+            except Exception as e:
+                print(f"    Error: {e}")
+    
+    return None
 
 
 def get_db_scenario_count() -> int:
@@ -56,12 +69,15 @@ def run_seeds(conn: duckdb.DuckDBPyConnection) -> None:
 
 def load_all_decision_points() -> int:
     """Load all decision point YAML files into the DB."""
-    dp_dir = DECISION_POINTS_DIR
-    if not dp_dir.exists():
-        print(f"  WARNING: Decision points directory not found: {dp_dir}")
+    dp_dir = find_decision_points_dir()
+    if dp_dir is None:
+        print("  WARNING: Decision points directory not found in any location")
         return 0
 
+    print(f"  Found decision points dir: {dp_dir}")
     yaml_files = sorted(dp_dir.glob("*.yaml"))
+    print(f"  YAML files found: {[f.name for f in yaml_files]}")
+
     if not yaml_files:
         print(f"  WARNING: No YAML files found in {dp_dir}")
         return 0
@@ -99,7 +115,7 @@ def init() -> None:
     print(f"[init_db] Loaded {loaded} scenarios from YAML. Total in DB: {new_count}")
 
     if new_count == 0:
-        print("[init_db] WARNING: No scenarios loaded! Check data/decision_points/")
+        print("[init_db] WARNING: No scenarios loaded!")
 
 
 if __name__ == "__main__":
