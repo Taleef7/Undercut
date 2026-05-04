@@ -250,8 +250,80 @@ Per GitHub issues #69-#84 and PROJECT_PLAN Week 4:
    - Custom domain setup
    - README screenshots
 
+---
+
+## 2026-05-04 — Deployment Fix: Vercel Build Failure
+
+### Problem
+Vercel deployment was failing with `[UNRESOLVED_IMPORT] Error: Could not resolve '../api/client'` in `src/pages/ScenarioSelect.tsx`, `ScenarioPlay.tsx`, and `DecisionResult.tsx`. The build worked locally but failed on Vercel.
+
+### Root Cause
+`.vercelignore` contained unanchored patterns like `api/`, `ingest/`, `sim/` etc. These matched **any** directory with those names anywhere in the project tree — including `web/src/api/`. Vercel stripped `web/src/api/client.ts` from the build context before running `npm run build`, causing the module resolution failures.
+
+### Fix
+Anchored all root-level directory exclusions in `.vercelignore` with a leading `/`:
+```diff
+- api/
+- ingest/
+- sim/
+- ml/
+- db/
+- data/
+- docs/
+- tests/
++ /api/
++ /ingest/
++ /sim/
++ /ml/
++ /db/
++ /data/
++ /docs/
++ /tests/
+```
+
+### Verification
+- Local build: `cd web && npm run build` ✅ passes
+- Vercel deployment: `undercut-frontend-2v9mxr4s8` ✅ Ready (16s)
+- Railway backend: `undercut-api-production.up.railway.app` ✅ Online
+- Health check: `GET /` returns `{"message":"Undercut API is running"}` ✅
+- Scenarios endpoint: `GET /scenarios` returns all 3 Brazil 2024 scenarios ✅
+
+### Commit
+`2d835bb` — `fix: anchor .vercelignore paths to root to prevent web/src/api exclusion`
+
+---
+
+## Current Status
+
+### What's Working
+- ✅ Full data pipeline: raw → canonical → race_state → feature_store
+- ✅ API: 5 endpoints (health, list scenarios, get scenario, submit decision, chaos decision)
+- ✅ ML: rule-based baselines with explainable recommendations
+- ✅ Simulation: circuit-aware lap times, tire degradation, pit loss, position impact
+- ✅ Frontend: 5 pages (ScenarioSelect, ScenarioPlay, DecisionResult, Disclaimer, Methodology) + Footer
+- ✅ Deployment: Railway backend + Vercel frontend both live
+- ✅ Tests: 85 passing
+
+### What's Next (Week 4 — Polish + Portfolio)
+Per GitHub issues #69-#84 and PROJECT_PLAN Week 4, remaining items:
+
+1. **Frontend polish**
+   - **Home.tsx landing page** — missing per AGENTS.md page build order (#6, last). Hero section, tagline, animated preview, CTA
+   - ScenarioSelect as `/scenarios` instead of `/` once Home exists
+   - Route `/` → Home, `/scenarios` → ScenarioSelect
+
+2. **Documentation** (#73-#75, #82-#84)
+   - README polish with screenshots and updated architecture diagram
+   - Loom walkthrough script
+   - README links to live demo + API docs
+
+3. **Portfolio polish**
+   - 90-second demo video
+   - Custom domain setup
+   - README screenshots
+
 ### Known Issues
-- No real production database (still DuckDB)
-- Only 3 curated scenarios
+- No real production database (still DuckDB on Railway volume)
+- Only 3 curated scenarios (all Brazil 2024)
 - No real ML model (rule-based only)
-- Frontend PR review #88 identified API client error handling and methodology accuracy gaps (fixed in this update)
+- No Home / landing page (root `/` routes directly to scenario selector)

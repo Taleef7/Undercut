@@ -9,17 +9,29 @@ Undercut is an **unofficial Formula 1 strategy simulation** where users replay h
 
 ## Try It Out
 
-- **Live Demo**: [https://web-epylqzraj-taleef7s-projects.vercel.app](https://web-epylqzraj-taleef7s-projects.vercel.app)
+- **Live Demo**: [https://undercut-frontend-git-main-taleef7s-projects.vercel.app](https://undercut-frontend-git-main-taleef7s-projects.vercel.app)
 - **API Docs**: [https://undercut-api-production.up.railway.app/docs](https://undercut-api-production.up.railway.app/docs)
+- **Backend Health**: [https://undercut-api-production.up.railway.app/](https://undercut-api-production.up.railway.app/)
+
+## Screenshots
+
+| Home | Scenario Select | Scenario Play |
+|------|----------------|---------------|
+| Hero section with tagline, race card preview, and CTA | Responsive card grid with circuit names, driver codes, lap numbers, and decision type badges | Driver position, gap cards, tire compound with cliff warning, track status, radio quote, and action buttons |
+
+| Decision Result | Chaos Engine | Methodology |
+|-----------------|--------------|-------------|
+| Score display with grade, historical comparison, model recommendation, risk gauge, and tradeoffs | "What if...?" toggle modifiers with alternate outcome simulation | Data pipeline explanation, ML methodology, and simulation engine details |
 
 ## Features
 
-- **3 Curated Scenarios** — Brazil 2024 (VER lap 32, NOR lap 40, VER lap 68)
+- **3 Curated Scenarios** — Brazil 2024 (VER lap 32, lap 48, lap 68)
 - **Real Race Data** — 1,137 laps, 54 stints, 35 pit stops from actual telemetry
 - **Rule-Based ML** — 5 pit-decision rules + 3 finish-position rules with confidence scores
-- **Chaos Engine** — "What if...?" modifiers: Safety Car, rain, tire cliff, slow stops, rival pits
+- **Chaos Engine** — "What if...?" modifiers: Safety Car, rain, tire cliff, slow stops, rival pits, red flag
 - **Simulation Engine** — Tire degradation curves, pit loss by circuit, scoring rubric
 - **Full Data Pipeline** — Jolpica + OpenF1 + FastF1 → DuckDB with 17 tables
+- **Dark Theme UI** — Tailwind CSS + shadcn/ui with F1-inspired color palette
 
 ## Architecture
 
@@ -132,6 +144,12 @@ undercut/
 │   │   ├── api/client.ts  # Typed fetch wrappers
 │   │   ├── components/    # Reusable UI
 │   │   └── pages/         # Game screens
+│   │       ├── Home.tsx           # Landing page
+│   │       ├── ScenarioSelect.tsx # Scenario card grid
+│   │       ├── ScenarioPlay.tsx   # Race decision screen
+│   │       ├── DecisionResult.tsx # Scored result + chaos
+│   │       ├── Disclaimer.tsx     # Legal disclaimer
+│   │       └── Methodology.tsx    # How it works
 │   ├── package.json
 │   └── vercel.json
 └── tests/                 # 85 pytest tests
