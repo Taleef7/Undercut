@@ -322,8 +322,54 @@ Per GitHub issues #69-#84 and PROJECT_PLAN Week 4, remaining items:
    - Custom domain setup
    - README screenshots
 
+---
+
+## 2026-05-04 — Frontend Hotfix: Blank Screen + UX Polish
+
+### Problems Reported
+1. **Blank screen when clicking any scenario** — both from `/scenarios` grid and from Home CTA buttons
+2. **CTA misalignment** — "Jump into a real race moment" text and button not centered in the CTA box
+3. **No back button on scenarios page** — users stuck after navigating to `/scenarios`
+4. **Scenario select too detailed/cluttered** — large cards with all action tags visible at once, no grouping by race
+
+### Root Cause: Blank Screen
+`ScenarioPlay.tsx` called `getScenarios()` inside `useEffect` (line 75) but `getScenarios` was **not imported** from `../api/client`. This caused a runtime `ReferenceError` that crashed React before any UI rendered. The missing import was a regression from a previous navigation feature addition (prev/next race scenarios).
+
+### Fixes Applied
+
+#### 1. Fix Blank Screen (`web/src/pages/ScenarioPlay.tsx`)
+- Added `getScenarios` to the import from `../api/client`
+- Changed `allScenarios` state type from `ScenarioDetail[]` to `ScenarioSummary[]` to match API return type
+
+#### 2. Fix CTA Alignment (`web/src/pages/Home.tsx`)
+- Removed `max-w-lg mx-auto` from heading and paragraph inside CTA box (caused left-align drift)
+- Added `flex flex-col items-center` to the CTA container for consistent centering
+
+#### 3. Add Back Button (`web/src/pages/ScenarioSelect.tsx`)
+- Added "Back to Home" button at top of page with `ArrowLeft` icon, matching existing nav button styling
+
+#### 4. Redesign Scenario Select (`web/src/pages/ScenarioSelect.tsx`)
+- **Collapsible race groups**: each race is a header row (name + scenario count) that expands on click
+- **Scenarios hidden by default**: clean, uncluttered list
+- **Concise scenario cards** when expanded: title, short description (2-line clamp), lap badge, decision type, driver code — no bulky action tag lists
+- **Auto-expand** single-race lists (Brazil 2024 auto-opens)
+- **ChevronDown** rotate animation for expand/collapse state
+
+### Commit
+`b3b97b0` — `fix: resolve blank screen on scenario click, redesign scenario select, add back buttons, fix CTA alignment`
+
+### Deployment
+- **Vercel frontend**: `https://web-gi6oe0hq1-taleef7s-projects.vercel.app` ✅ Ready (23s build)
+- **Railway backend**: No redeploy needed (frontend-only changes)
+
+### Verification
+- Local build: `cd web && npm run build` ✅ passes
+- Vercel production build: ✅ passes
+- Scenarios page loads ✅
+- Scenario click navigates to `/scenario/:id` ✅
+- Back buttons work on both ScenarioSelect and ScenarioPlay ✅
+
 ### Known Issues
 - No real production database (still DuckDB on Railway volume)
 - Only 3 curated scenarios (all Brazil 2024)
 - No real ML model (rule-based only)
-- No Home / landing page (root `/` routes directly to scenario selector)
