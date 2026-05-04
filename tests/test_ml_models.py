@@ -6,7 +6,9 @@ import tempfile
 import shutil
 
 from ml.datasets.pit_decision_dataset import PitDecisionDataset
+from ml.datasets.finish_position_dataset import FinishPositionDataset
 from ml.models.pit_decision_model import PitDecisionModel
+from ml.models.finish_position_model import FinishPositionModel
 
 
 @pytest.fixture
@@ -45,3 +47,15 @@ def test_pit_model_explain_returns_strings(training_data):
     explanations = model.explain(X_train.iloc[[0]])
     assert len(explanations) == 3
     assert all(isinstance(e, str) for e in explanations)
+
+
+def test_finish_model_train_and_predict():
+    ds = FinishPositionDataset()
+    X_train, y_train, _, _, feature_names = ds.build()
+    if X_train.empty:
+        pytest.skip("No finish position data available")
+    model = FinishPositionModel(model_type="xgboost")
+    model.train(X_train, y_train, feature_names)
+    band, conf = model.predict(X_train.iloc[[0]])
+    assert band in ("P1-P3", "P4-P6", "P7-P10", "P11-P15", "P16+")
+    assert 0 <= conf <= 1
