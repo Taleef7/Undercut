@@ -1,7 +1,6 @@
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import {
   getScenario,
   submitDecision,
@@ -17,6 +16,9 @@ import {
   Thermometer,
   Radio,
   Loader2,
+  Terminal,
+  ArrowLeft,
+  Activity,
 } from "lucide-react";
 
 const ACTION_LABELS: Record<string, string> = {
@@ -34,17 +36,22 @@ const COMPOUND_COLORS: Record<string, string> = {
   wet: "bg-blue-500",
 };
 
+const COMPOUND_GLOWS: Record<string, string> = {
+  soft: "shadow-[0_0_8px_rgba(239,68,68,0.4)]",
+  medium: "shadow-[0_0_8px_rgba(234,179,8,0.4)]",
+  hard: "shadow-[0_0_8px_rgba(156,163,175,0.4)]",
+  intermediate: "shadow-[0_0_8px_rgba(34,197,94,0.4)]",
+  wet: "shadow-[0_0_8px_rgba(59,130,246,0.4)]",
+};
+
 const DEFAULT_TRACK_STATUS = "green";
 
-const TRACK_STATUS_VARIANTS: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  green: "default",
-  yellow: "secondary",
-  safety_car: "destructive",
-  vsc: "destructive",
-  red_flag: "destructive",
+const TRACK_STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  green: { bg: "bg-strong/10", text: "text-strong", border: "border-strong/30" },
+  yellow: { bg: "bg-risky/10", text: "text-risky", border: "border-risky/30" },
+  safety_car: { bg: "bg-poor/10", text: "text-poor", border: "border-poor/30" },
+  vsc: { bg: "bg-poor/10", text: "text-poor", border: "border-poor/30" },
+  red_flag: { bg: "bg-poor/20", text: "text-poor", border: "border-poor/50" },
 };
 
 export default function ScenarioPlay() {
@@ -88,7 +95,10 @@ export default function ScenarioPlay() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
-        <Loader2 className="animate-spin text-primary" size={32} />
+        <div className="flex items-center gap-3">
+          <Loader2 className="animate-spin text-papaya" size={24} />
+          <span className="text-sm font-mono text-muted-foreground">Loading telemetry...</span>
+        </div>
       </div>
     );
   }
@@ -96,7 +106,7 @@ export default function ScenarioPlay() {
   if (!scenario) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
-        <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 max-w-md text-center">
+        <div className="text-poor bg-poor/10 border border-poor/20 px-4 py-3 max-w-md text-center font-mono text-sm">
           {error || "Scenario not found"}
         </div>
       </div>
@@ -116,163 +126,197 @@ export default function ScenarioPlay() {
   };
   const totalLaps = scenario.lap_number + rs.laps_remaining;
   const compoundColor = COMPOUND_COLORS[rs.compound.toLowerCase()] ?? "bg-gray-500";
+  const compoundGlow = COMPOUND_GLOWS[rs.compound.toLowerCase()] ?? "";
+  const trackStatusStyle = TRACK_STATUS_STYLES[rs.track_status] ?? TRACK_STATUS_STYLES.green;
   const cliffWarning =
-    rs.stint_age_laps > 25 ? "text-destructive" : rs.stint_age_laps > 20 ? "text-risky" : "";
+    rs.stint_age_laps > 25 ? "text-poor" : rs.stint_age_laps > 20 ? "text-risky" : "";
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-6 py-8">
-      <div className="max-w-3xl mx-auto text-left">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="text-sm text-muted-foreground mb-1">
-              Brazil 2024 · Race
-            </div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Lap {scenario.lap_number} of {totalLaps}
-            </h1>
-          </div>
-          <Badge
-            variant={TRACK_STATUS_VARIANTS[rs.track_status] ?? "outline"}
-            className="text-xs uppercase tracking-wider"
-          >
-            {rs.track_status.replace(/_/g, " ")}
-          </Badge>
-        </div>
+    <div className="min-h-screen bg-background text-foreground relative">
+      <div className="absolute inset-0 grid-bg pointer-events-none" />
+      <div className="absolute inset-0 scanlines pointer-events-none" />
 
-        {/* Driver + Position */}
-        <div className="bg-card border border-border rounded-xl p-5 mb-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground mb-1">Driver</div>
-              <div className="text-3xl font-bold text-foreground tracking-tight">
-                {scenario.driver_id}
+      <div className="relative px-6 py-8 max-w-4xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={() => navigate("/scenarios")}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 font-mono"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Scenarios</span>
+        </button>
+
+        {/* Terminal chrome header */}
+        <div className="bg-card border border-border glow-border mb-6">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Terminal size={14} className="text-muted-foreground" />
+              <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                race_live_telemetry.exe
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-1.5 bg-strong animate-pulse" />
+              <span className="text-xs font-mono text-strong">LIVE</span>
+            </div>
+          </div>
+
+          <div className="p-5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <div className="text-xs font-mono text-muted-foreground mb-1 uppercase tracking-wider">
+                  Brazil 2024 · Race
+                </div>
+                <h1 className="text-2xl font-heading">
+                  Lap {scenario.lap_number} of {totalLaps}
+                </h1>
+              </div>
+              <div className={`px-3 py-1 ${trackStatusStyle.bg} border ${trackStatusStyle.border}`}>
+                <span className={`text-xs font-mono uppercase tracking-wider ${trackStatusStyle.text}`}>
+                  {rs.track_status.replace(/_/g, " ")}
+                </span>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-muted-foreground mb-1">Position</div>
-              <div className="text-5xl font-bold text-primary leading-none">
-                P{rs.current_position}
+
+            {/* Driver + Position */}
+            <div className="grid grid-cols-2 gap-4 mb-5">
+              <div className="bg-secondary/50 border border-border p-4">
+                <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">Driver</div>
+                <div className="text-4xl font-heading text-foreground">
+                  {scenario.driver_id}
+                </div>
+              </div>
+              <div className="bg-secondary/50 border border-border p-4 text-right">
+                <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">Position</div>
+                <div className="text-6xl font-heading text-papaya leading-none">
+                  P{rs.current_position}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Gaps */}
-        <div className="grid grid-cols-2 gap-3 mb-5">
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <ChevronUp size={16} className="text-strong" />
-              Gap Ahead
+            {/* Gaps */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="bg-secondary/30 border border-border p-4">
+                <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground mb-1 uppercase">
+                  <ChevronUp size={14} className="text-strong" />
+                  Gap Ahead
+                </div>
+                <div className="text-xl font-mono text-foreground">
+                  {rs.gap_ahead_seconds !== null
+                    ? `+${rs.gap_ahead_seconds.toFixed(1)}s`
+                    : "—"}
+                </div>
+              </div>
+              <div className="bg-secondary/30 border border-border p-4">
+                <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground mb-1 uppercase">
+                  <ChevronDown size={14} className="text-poor" />
+                  Gap Behind
+                </div>
+                <div className="text-xl font-mono text-foreground">
+                  {rs.gap_behind_seconds !== null
+                    ? `+${rs.gap_behind_seconds.toFixed(1)}s`
+                    : "—"}
+                </div>
+              </div>
             </div>
-            <div className="text-xl font-semibold text-foreground">
-              {rs.gap_ahead_seconds !== null
-                ? `+${rs.gap_ahead_seconds.toFixed(1)}s`
-                : "—"}
-            </div>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-              <ChevronDown size={16} className="text-destructive" />
-              Gap Behind
-            </div>
-            <div className="text-xl font-semibold text-foreground">
-              {rs.gap_behind_seconds !== null
-                ? `+${rs.gap_behind_seconds.toFixed(1)}s`
-                : "—"}
-            </div>
-          </div>
-        </div>
 
-        {/* Tire + Weather */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="text-sm text-muted-foreground mb-2">Tire Strategy</div>
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-4 h-4 rounded-full ${compoundColor} ring-2 ring-white/10`}
+            {/* Tire + Weather */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+              <div className="bg-secondary/30 border border-border p-4">
+                <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">Tire Strategy</div>
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-4 h-4 ${compoundColor} ${compoundGlow}`}
+                  />
+                  <div className="text-base font-heading capitalize text-foreground">
+                    {rs.compound}
+                  </div>
+                  <div className={`text-sm font-mono ${cliffWarning}`}>
+                    {rs.stint_age_laps} laps old
+                    {rs.stint_age_laps > 25 && " · CLIFF"}
+                    {rs.stint_age_laps > 20 && rs.stint_age_laps <= 25 && " · WARNING"}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-secondary/30 border border-border p-4">
+                <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">Conditions</div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 text-sm text-foreground font-mono">
+                    <Thermometer size={14} className="text-muted-foreground" />
+                    Track {rs.track_temperature_c}°C
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm text-foreground font-mono">
+                    {rs.rainfall ? (
+                      <CloudRain size={14} className="text-blue-400" />
+                    ) : (
+                      <Sun size={14} className="text-yellow-400" />
+                    )}
+                    {rs.rainfall ? "Rain" : "Dry"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="mb-5">
+              <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">Stint Timeline</div>
+              <StintTimeline
+                totalLaps={totalLaps}
+                currentLap={scenario.lap_number}
+                compound={rs.compound}
+                stintAge={rs.stint_age_laps}
               />
-              <div className="text-base font-semibold capitalize text-foreground">
-                {rs.compound}
-              </div>
-              <div className={`text-sm font-medium ${cliffWarning}`}>
-                {rs.stint_age_laps} laps old
-                {rs.stint_age_laps > 25 && " · CLIFF"}
-                {rs.stint_age_laps > 20 && rs.stint_age_laps <= 25 && " · Warning"}
+            </div>
+
+            {/* Radio Quote */}
+            <div className="bg-secondary/30 border border-border p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <Radio size={16} className="text-papaya mt-0.5 shrink-0" />
+                <p className="text-sm text-foreground leading-relaxed italic font-sans">
+                  {scenario.scenario_description}
+                </p>
               </div>
             </div>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="text-sm text-muted-foreground mb-2">Conditions</div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-sm text-foreground">
-                <Thermometer size={16} className="text-muted-foreground" />
-                Track {rs.track_temperature_c}°C
+
+            {/* Error Banner */}
+            {error && (
+              <div className="mb-4 text-poor bg-poor/10 border border-poor/20 px-4 py-3 text-sm font-mono">
+                {error}
               </div>
-              <div className="flex items-center gap-1.5 text-sm text-foreground">
-                {rs.rainfall ? (
-                  <CloudRain size={16} className="text-blue-400" />
-                ) : (
-                  <Sun size={16} className="text-yellow-400" />
-                )}
-                {rs.rainfall ? "Rain" : "Dry"}
+            )}
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 mb-3">
+                <Activity size={14} className="text-papaya" />
+                <span className="text-sm font-heading uppercase tracking-wider">Your Call</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {scenario.available_actions.map((action) => {
+                  const isDisabled = action === disabledAction;
+                  return (
+                    <Button
+                      key={action}
+                      variant={isDisabled ? "outline" : "default"}
+                      size="lg"
+                      disabled={isDisabled || submitting}
+                      className={`w-full justify-center text-sm font-heading uppercase tracking-wide ${
+                        isDisabled
+                          ? "opacity-40 cursor-not-allowed border-border"
+                          : "bg-papaya text-background hover:bg-papaya/90"
+                      }`}
+                      onClick={() => handleAction(action)}
+                    >
+                      {submitting && !isDisabled ? (
+                        <Loader2 className="animate-spin mr-2" size={16} />
+                      ) : null}
+                      {ACTION_LABELS[action] ?? action}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Timeline */}
-        <div className="mb-5">
-          <div className="text-sm text-muted-foreground mb-2">Stint Timeline</div>
-          <StintTimeline
-            totalLaps={totalLaps}
-            currentLap={scenario.lap_number}
-            compound={rs.compound}
-            stintAge={rs.stint_age_laps}
-          />
-        </div>
-
-        {/* Radio Quote */}
-        <div className="bg-secondary/30 border border-border rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <Radio size={18} className="text-primary mt-0.5 shrink-0" />
-            <p className="text-sm text-foreground leading-relaxed italic">
-              {scenario.scenario_description}
-            </p>
-          </div>
-        </div>
-
-        {/* Error Banner */}
-        {error && (
-          <div className="mb-4 text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="space-y-3">
-          <div className="text-sm font-medium text-foreground">Your Call</div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {scenario.available_actions.map((action) => {
-              const isDisabled = action === disabledAction;
-              return (
-                <Button
-                  key={action}
-                  variant={isDisabled ? "outline" : "default"}
-                  size="lg"
-                  disabled={isDisabled || submitting}
-                  className={`w-full justify-center text-sm font-semibold ${
-                    isDisabled ? "opacity-40 cursor-not-allowed" : ""
-                  }`}
-                  onClick={() => handleAction(action)}
-                >
-                  {submitting && !isDisabled ? (
-                    <Loader2 className="animate-spin mr-2" size={16} />
-                  ) : null}
-                  {ACTION_LABELS[action] ?? action}
-                </Button>
-              );
-            })}
           </div>
         </div>
       </div>

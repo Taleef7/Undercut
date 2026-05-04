@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "../components/ui/button";
-import { Badge } from "../components/ui/badge";
 import { Switch } from "../components/ui/switch";
 import type { ScenarioDetail, DecisionResponse, ChaosModifier } from "../api/client";
 import { submitChaosDecision } from "../api/client";
-import { RotateCcw, ArrowRight, Sparkles } from "lucide-react";
+import { RotateCcw, ArrowRight, Sparkles, Terminal, Activity, Zap } from "lucide-react";
 
 const GRADE_COLORS: Record<string, string> = {
   Masterful: "text-gold",
@@ -62,13 +61,16 @@ export default function DecisionResult() {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
         <div className="text-center max-w-md">
-          <h2 className="text-xl font-semibold text-foreground mb-2">
+          <Terminal size={32} className="text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-heading mb-2">
             No result to show
           </h2>
-          <p className="text-muted-foreground mb-4">
+          <p className="text-muted-foreground mb-4 font-sans">
             Play a scenario first to see your result.
           </p>
-          <Button onClick={() => navigate("/")}>Browse Scenarios</Button>
+          <Button onClick={() => navigate("/")} className="bg-papaya text-background hover:bg-papaya/90 font-heading uppercase tracking-wide">
+            Browse Scenarios
+          </Button>
         </div>
       </div>
     );
@@ -107,218 +109,252 @@ export default function DecisionResult() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground px-6 py-8">
-      <div className="max-w-2xl mx-auto text-left">
-        {/* Score */}
-        <div className="text-center mb-6">
-          <div className="text-sm text-muted-foreground mb-1">Your Score</div>
-          <div className="text-7xl font-bold text-foreground tracking-tight">
-            {response.score}
-          </div>
-          <div
-            className={`text-lg font-semibold mt-1 ${getGradeColor(response.grade)}`}
-          >
-            {response.grade}
-          </div>
-        </div>
+    <div className="min-h-screen bg-background text-foreground relative">
+      <div className="absolute inset-0 grid-bg pointer-events-none" />
+      <div className="absolute inset-0 scanlines pointer-events-none" />
 
-        {/* Comparison */}
-        <div className="bg-card border border-border rounded-xl p-4 mb-5">
-          <div className="flex items-center justify-between text-sm">
-            <div>
-              <span className="text-muted-foreground">You chose</span>{" "}
-              <span className="font-semibold text-foreground capitalize">
-                {response.user_action.replace(/_/g, " ")}
+      <div className="relative px-6 py-8 max-w-3xl mx-auto">
+        {/* Terminal chrome */}
+        <div className="bg-card border border-border glow-border mb-6">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Terminal size={14} className="text-muted-foreground" />
+              <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                strategy_analysis.exe
               </span>
             </div>
-            <div className="text-muted-foreground">/</div>
-            <div>
-              <span className="text-muted-foreground">Real team chose</span>{" "}
-              <span className="font-semibold text-foreground capitalize">
-                {response.historical_decision.replace(/_/g, " ")}
-              </span>
+            <div className="flex items-center gap-2">
+              <Activity size={12} className="text-papaya" />
+              <span className="text-xs font-mono text-papaya">ANALYSIS COMPLETE</span>
             </div>
           </div>
-        </div>
 
-        {/* Model rec */}
-        <div className="flex items-center gap-3 mb-5">
-          <Badge variant="secondary" className="text-xs">
-            Model says: {response.model_recommendation.replace(/_/g, " ")}
-          </Badge>
-          {response.model_confidence != null && (
-            <span className="text-sm text-muted-foreground">
-              {(response.model_confidence * 100).toFixed(0)}% confidence
-            </span>
-          )}
-        </div>
-
-        {/* Simulation Summary */}
-        <div className="bg-card border border-border rounded-xl p-4 mb-5">
-          <div className="text-sm font-medium text-foreground mb-3">
-            Simulation Summary
-          </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <div className="text-xs text-muted-foreground">Expected Position</div>
-              <div className="text-lg font-semibold text-foreground">
-                P{sim.expected_position}
+          <div className="p-5">
+            {/* Score */}
+            <div className="text-center mb-8 py-6 border-b border-border">
+              <div className="text-xs font-mono text-muted-foreground mb-2 uppercase tracking-widest">Your Score</div>
+              <div className="text-8xl font-heading text-foreground tracking-tight">
+                {response.score}
               </div>
-            </div>
-            <div>
-              <div className="text-xs text-muted-foreground">Finish Band</div>
-              <div className="text-lg font-semibold text-foreground">
-                {sim.expected_finish_position_band}
-              </div>
-            </div>
-          </div>
-          <div>
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-              <span>Risk Score</span>
-              <span>{(sim.risk_score * 100).toFixed(0)}%</span>
-            </div>
-            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
               <div
-                className={`h-full rounded-full transition-all ${getRiskBarColor(
-                  sim.risk_score
-                )}`}
-                style={{ width: `${sim.risk_score * 100}%` }}
-              />
+                className={`text-xl font-heading mt-2 uppercase tracking-wide ${getGradeColor(response.grade)}`}
+              >
+                {response.grade}
+              </div>
             </div>
-            <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-              <span>Tire: {sim.tire_risk}</span>
-              <span>Track: {sim.track_position_risk}</span>
+
+            {/* Comparison */}
+            <div className="bg-secondary/30 border border-border p-4 mb-5">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">Your Call</div>
+                  <span className="font-heading text-foreground uppercase tracking-wide">
+                    {response.user_action.replace(/_/g, " ")}
+                  </span>
+                </div>
+                <div>
+                  <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">Real Team</div>
+                  <span className="font-heading text-foreground uppercase tracking-wide">
+                    {response.historical_decision.replace(/_/g, " ")}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Model rec */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="px-2 py-1 bg-secondary border border-border">
+                <span className="text-xs font-mono text-muted-foreground">
+                  MODEL: {response.model_recommendation.replace(/_/g, " ").toUpperCase()}
+                </span>
+              </div>
+              {response.model_confidence != null && (
+                <span className="text-sm font-mono text-muted-foreground">
+                  {(response.model_confidence * 100).toFixed(0)}% confidence
+                </span>
+              )}
+            </div>
+
+            {/* Simulation Summary */}
+            <div className="bg-secondary/30 border border-border p-4 mb-5">
+              <div className="text-sm font-heading uppercase tracking-wider mb-4">
+                Simulation Summary
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <div className="text-xs font-mono text-muted-foreground uppercase mb-1">Expected Position</div>
+                  <div className="text-2xl font-heading text-foreground">
+                    P{sim.expected_position}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-mono text-muted-foreground uppercase mb-1">Finish Band</div>
+                  <div className="text-2xl font-heading text-foreground">
+                    {sim.expected_finish_position_band}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between text-xs font-mono text-muted-foreground uppercase mb-2">
+                  <span>Risk Score</span>
+                  <span>{(sim.risk_score * 100).toFixed(0)}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-secondary border border-border overflow-hidden">
+                  <div
+                    className={`h-full transition-all ${getRiskBarColor(
+                      sim.risk_score
+                    )}`}
+                    style={{ width: `${sim.risk_score * 100}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono text-muted-foreground mt-2 uppercase">
+                  <span>Tire: {sim.tire_risk}</span>
+                  <span>Track: {sim.track_position_risk}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Tradeoffs */}
+            <div className="mb-5">
+              <div className="text-sm font-heading uppercase tracking-wider mb-3">Tradeoffs</div>
+              <ul className="space-y-2">
+                {response.tradeoffs.map((t, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 text-sm text-foreground font-sans"
+                  >
+                    <span className="mt-2 w-1 h-1 bg-papaya shrink-0" />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Explanation */}
+            <div className="mb-8">
+              <div className="text-sm font-heading uppercase tracking-wider mb-3">Analysis</div>
+              <p className="text-sm text-muted-foreground leading-relaxed font-sans">
+                {response.explanation}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-10">
+              <Button
+                variant="outline"
+                className="flex-1 border-border hover:border-papaya/50 font-heading uppercase tracking-wide"
+                onClick={() =>
+                  navigate(`/scenario/${scenario.decision_point_id}`, {
+                    state: { disabledAction: response.user_action },
+                  })
+                }
+              >
+                <RotateCcw size={16} className="mr-2" />
+                Try a Different Call
+              </Button>
+              <Button
+                className="flex-1 bg-papaya text-background hover:bg-papaya/90 font-heading uppercase tracking-wide"
+                onClick={() => navigate("/")}
+              >
+                <ArrowRight size={16} className="mr-2" />
+                Play Another
+              </Button>
             </div>
           </div>
-        </div>
-
-        {/* Tradeoffs */}
-        <div className="mb-5">
-          <div className="text-sm font-medium text-foreground mb-2">Tradeoffs</div>
-          <ul className="space-y-2">
-            {response.tradeoffs.map((t, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2 text-sm text-foreground"
-              >
-                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                {t}
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Explanation */}
-        <div className="mb-8">
-          <div className="text-sm font-medium text-foreground mb-2">Analysis</div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {response.explanation}
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-10">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() =>
-              navigate(`/scenario/${scenario.decision_point_id}`, {
-                state: { disabledAction: response.user_action },
-              })
-            }
-          >
-            <RotateCcw size={16} className="mr-2" />
-            Try a Different Call
-          </Button>
-          <Button
-            className="flex-1"
-            onClick={() => navigate("/")}
-          >
-            <ArrowRight size={16} className="mr-2" />
-            Play Another
-          </Button>
         </div>
 
         {/* Chaos Engine */}
-        <div className="border-t border-border pt-8">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles size={18} className="text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">What if...?</h2>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Toggle chaos modifiers to see how unexpected events would have changed the outcome of your decision.
-          </p>
-
-          <div className="bg-card border border-border rounded-xl p-4 mb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {MODIFIERS.map((m) => (
-                <div key={m.key} className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-foreground">{m.label}</span>
-                  <Switch
-                    checked={!!activeModifiers[m.key]}
-                    onCheckedChange={() => toggleModifier(m.key)}
-                  />
-                </div>
-              ))}
+        <div className="bg-card border border-border glow-border">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+            <div className="flex items-center gap-2">
+              <Zap size={14} className="text-risky" />
+              <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                chaos_engine.exe
+              </span>
             </div>
+            <span className="text-xs font-mono text-risky">EXPERIMENTAL</span>
           </div>
 
-          {chaosError && (
-            <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 text-sm mb-4">
-              {chaosError}
+          <div className="p-5">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles size={16} className="text-papaya" />
+              <h2 className="text-lg font-heading">What if...?</h2>
             </div>
-          )}
+            <p className="text-sm text-muted-foreground mb-4 font-sans">
+              Toggle chaos modifiers to see how unexpected events would have changed the outcome of your decision.
+            </p>
 
-          <Button
-            onClick={handleSimulateChaos}
-            disabled={chaosLoading}
-            className="mb-6"
-          >
-            <Sparkles size={16} className="mr-2" />
-            {chaosLoading ? "Simulating..." : "Simulate Chaos"}
-          </Button>
-
-          {chaosResult && (
-            <div className="bg-card border border-border rounded-xl p-4">
-              <div className="text-sm font-medium text-foreground mb-3">
-                Modified Result
-              </div>
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <div>
-                  <div className="text-xs text-muted-foreground">Score</div>
-                  <div className="text-lg font-semibold text-foreground">
-                    {chaosResult.score}
+            <div className="bg-secondary/30 border border-border p-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {MODIFIERS.map((m) => (
+                  <div key={m.key} className="flex items-center justify-between gap-3">
+                    <span className="text-sm text-foreground font-mono">{m.label}</span>
+                    <Switch
+                      checked={!!activeModifiers[m.key]}
+                      onCheckedChange={() => toggleModifier(m.key)}
+                    />
                   </div>
-                  <div className={`text-xs font-medium ${getGradeColor(chaosResult.grade)}`}>
-                    {chaosResult.grade}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-muted-foreground">Expected Position</div>
-                  <div className="text-lg font-semibold text-foreground">
-                    P{chaosResult.simulation_summary.expected_position}
-                  </div>
-                </div>
+                ))}
               </div>
-              <div className="mb-3">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span>Risk Score</span>
-                  <span>{(chaosResult.simulation_summary.risk_score * 100).toFixed(0)}%</span>
-                </div>
-                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${getRiskBarColor(
-                      chaosResult.simulation_summary.risk_score
-                    )}`}
-                    style={{ width: `${chaosResult.simulation_summary.risk_score * 100}%` }}
-                  />
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {chaosResult.explanation}
-              </p>
             </div>
-          )}
+
+            {chaosError && (
+              <div className="text-poor bg-poor/10 border border-poor/20 px-4 py-3 text-sm mb-4 font-mono">
+                {chaosError}
+              </div>
+            )}
+
+            <Button
+              onClick={handleSimulateChaos}
+              disabled={chaosLoading}
+              className="mb-6 bg-papaya text-background hover:bg-papaya/90 font-heading uppercase tracking-wide"
+            >
+              <Sparkles size={16} className="mr-2" />
+              {chaosLoading ? "Simulating..." : "Simulate Chaos"}
+            </Button>
+
+            {chaosResult && (
+              <div className="bg-secondary/30 border border-border p-4">
+                <div className="text-sm font-heading uppercase tracking-wider mb-3">
+                  Modified Result
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <div className="text-xs font-mono text-muted-foreground uppercase mb-1">Score</div>
+                    <div className="text-2xl font-heading text-foreground">
+                      {chaosResult.score}
+                    </div>
+                    <div className={`text-xs font-medium font-heading uppercase ${getGradeColor(chaosResult.grade)}`}>
+                      {chaosResult.grade}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-mono text-muted-foreground uppercase mb-1">Expected Position</div>
+                    <div className="text-2xl font-heading text-foreground">
+                      P{chaosResult.simulation_summary.expected_position}
+                    </div>
+                  </div>
+                </div>
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-xs font-mono text-muted-foreground uppercase mb-1">
+                    <span>Risk Score</span>
+                    <span>{(chaosResult.simulation_summary.risk_score * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-secondary border border-border overflow-hidden">
+                    <div
+                      className={`h-full transition-all ${getRiskBarColor(
+                        chaosResult.simulation_summary.risk_score
+                      )}`}
+                      style={{ width: `${chaosResult.simulation_summary.risk_score * 100}%` }}
+                    />
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed font-sans">
+                  {chaosResult.explanation}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
