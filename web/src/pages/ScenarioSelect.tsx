@@ -10,24 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { getScenarios, type ScenarioSummary } from "@/api/client";
 
-const SESSION_LABELS: Record<string, string> = {
-  R: "Race",
-  Q: "Qualifying",
-  S: "Sprint",
-  SQ: "Sprint Shootout",
-  FP1: "Free Practice 1",
-  FP2: "Free Practice 2",
-  FP3: "Free Practice 3",
-};
-
-function parseCircuitName(id: string): string {
-  const parts = id.split("_");
+function parseCircuitName(decisionPointId: string): string {
+  const parts = decisionPointId.split("_");
   if (parts.length >= 2) {
     const city = parts[0];
     const year = parts[1];
     return `${city.charAt(0).toUpperCase() + city.slice(1)} ${year}`;
   }
-  return id;
+  return decisionPointId;
 }
 
 export default function ScenarioSelect() {
@@ -74,9 +64,9 @@ export default function ScenarioSelect() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {scenarios.map((s) => (
               <Card
-                key={s.id}
+                key={s.decision_point_id}
                 className="bg-card border-border hover:border-primary/50 hover:shadow-md transition-all cursor-pointer text-left"
-                onClick={() => navigate(`/scenario/${s.id}`)}
+                onClick={() => navigate(`/scenario/${s.decision_point_id}`)}
               >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
@@ -85,13 +75,13 @@ export default function ScenarioSelect() {
                     </CardTitle>
                     <Badge
                       variant="outline"
-                      className="shrink-0 text-xs border-border text-muted-foreground"
+                      className="shrink-0 text-xs border-border text-muted-foreground capitalize"
                     >
-                      {SESSION_LABELS[s.session_id] ?? s.session_id}
+                      {s.decision_type.replace(/_/g, " ")}
                     </Badge>
                   </div>
                   <CardDescription className="text-xs text-muted-foreground mt-1">
-                    {parseCircuitName(s.id)}
+                    {parseCircuitName(s.decision_point_id)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">

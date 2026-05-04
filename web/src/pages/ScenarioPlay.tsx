@@ -34,6 +34,8 @@ const COMPOUND_COLORS: Record<string, string> = {
   wet: "bg-blue-500",
 };
 
+const DEFAULT_TRACK_STATUS = "green";
+
 const TRACK_STATUS_VARIANTS: Record<
   string,
   "default" | "secondary" | "destructive" | "outline"
@@ -102,12 +104,14 @@ export default function ScenarioPlay() {
 
   const rs = {
     current_position: scenario.current_position,
+    gap_ahead_seconds: scenario.gap_ahead_seconds,
+    gap_behind_seconds: scenario.gap_behind_seconds,
     compound: scenario.compound,
     laps_remaining: scenario.laps_remaining,
     stint_age_laps: scenario.stint_age_laps,
-    track_status: scenario.track_status,
-    weather: scenario.weather,
-    temperature_c: scenario.temperature_c,
+    track_status: scenario.track_status ?? DEFAULT_TRACK_STATUS,
+    track_temperature_c: scenario.track_temperature_c,
+    rainfall: scenario.rainfall,
   };
   const totalLaps = scenario.lap_number + rs.laps_remaining;
   const compoundColor = COMPOUND_COLORS[rs.compound.toLowerCase()] ?? "bg-gray-500";
@@ -121,7 +125,7 @@ export default function ScenarioPlay() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="text-sm text-muted-foreground mb-1">
-              Brazil 2024 · {scenario.session_id === "R" ? "Race" : scenario.session_id}
+              Brazil 2024 · Race
             </div>
             <h1 className="text-2xl font-bold text-foreground">
               Lap {scenario.lap_number} of {totalLaps}
@@ -131,7 +135,7 @@ export default function ScenarioPlay() {
             variant={TRACK_STATUS_VARIANTS[rs.track_status] ?? "outline"}
             className="text-xs uppercase tracking-wider"
           >
-            {rs.track_status.replace("_", " ")}
+            {rs.track_status.replace(/_/g, " ")}
           </Badge>
         </div>
 

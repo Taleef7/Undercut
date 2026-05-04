@@ -1,35 +1,33 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 export interface ScenarioSummary {
-  id: string;
-  session_id: string;
+  decision_point_id: string;
+  scenario_title: string;
+  scenario_description: string;
   driver_id: string;
   lap_number: number;
   decision_type: string;
-  scenario_title: string;
-  scenario_description: string;
+  available_actions: string[];
+  difficulty_level: string | null;
 }
 
 export interface ScenarioDetail extends ScenarioSummary {
-  available_actions: string[];
   actual_decision: string;
   actual_outcome_summary: string;
   explanation_short: string;
   explanation_long: string;
-  race_state: {
-    current_position: number;
-    gap_ahead_seconds: number | null;
-    gap_behind_seconds: number | null;
-    compound: string;
-    stint_age_laps: number;
-    laps_remaining: number;
-    track_temperature_c: number;
-    air_temperature_c: number;
-    rainfall: boolean;
-    track_status: string;
-    safety_car_active: boolean;
-    virtual_safety_car_active: boolean;
-  };
+  current_position: number;
+  gap_ahead_seconds: number | null;
+  gap_behind_seconds: number | null;
+  compound: string;
+  stint_age_laps: number;
+  laps_remaining: number;
+  track_temperature_c: number | null;
+  air_temperature_c: number | null;
+  rainfall: boolean | null;
+  track_status: string | null;
+  safety_car_active: boolean | null;
+  virtual_safety_car_active: boolean | null;
 }
 
 export interface SimulationSummary {
@@ -47,7 +45,7 @@ export interface DecisionResponse {
   grade: string;
   historical_decision: string;
   model_recommendation: string;
-  model_confidence: number;
+  model_confidence: number | null;
   model_top_features: string[];
   simulation_summary: SimulationSummary;
   explanation: string;

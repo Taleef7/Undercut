@@ -93,9 +93,11 @@ export default function DecisionResult() {
           <Badge variant="secondary" className="text-xs">
             Model says: {response.model_recommendation.replace(/_/g, " ")}
           </Badge>
-          <span className="text-sm text-muted-foreground">
-            {(response.model_confidence * 100).toFixed(0)}% confidence
-          </span>
+          {response.model_confidence != null && (
+            <span className="text-sm text-muted-foreground">
+              {(response.model_confidence * 100).toFixed(0)}% confidence
+            </span>
+          )}
         </div>
 
         {/* Simulation Summary */}
