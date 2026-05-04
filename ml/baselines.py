@@ -10,8 +10,8 @@ def predict_pit_decision(context: ScenarioContext) -> Tuple[str, float, List[str
 
     # Rule 1: Safety car
     if getattr(context, 'safety_car_active', False):
-        reasons.append("Safety car on track — pitting now loses track position")
-        return "stay_out", 0.9, reasons
+        reasons.append("Safety car reduces pit loss — good time to pit")
+        return "pit_now", 0.85, reasons
 
     # Rule 2: Rain
     if getattr(context, 'rainfall', False) or getattr(context, 'track_status', '') in ('wet', 'rain_starts'):
@@ -44,7 +44,7 @@ def predict_pit_decision(context: ScenarioContext) -> Tuple[str, float, List[str
 def predict_finish_position_band(context: ScenarioContext, sim_result) -> Tuple[str, float, List[str]]:
     """Predict finish position band."""
     reasons = []
-    position = getattr(context, 'position', 10)
+    position = getattr(sim_result, 'expected_position', getattr(context, 'position', 10))
     gap_ahead = getattr(context, 'gap_ahead', 0)
 
     # Rule 1: Pace delta

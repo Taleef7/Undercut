@@ -210,7 +210,7 @@ Migration `005_corrections.sql`:
 - PR #87 created and merged (frontend bootstrap + core pages + Codex review fixes)
 
 ### Test Count
-- **101 tests passing** (68 + 13 baselines + 15 chaos + 5 existing)
+- **85 tests passing**
 
 ---
 
@@ -222,7 +222,7 @@ Migration `005_corrections.sql`:
 - ✅ ML: rule-based baselines with explainable recommendations
 - ✅ Simulation: circuit-aware lap times, tire degradation, pit loss, position impact
 - ✅ Frontend: 3 core pages with dark theme, responsive layout, typed API client
-- ✅ Tests: 101 passing
+- ✅ Tests: 85 passing
 
 ### What's Next (Week 4 — Chaos + Deploy + Polish)
 Per GitHub issues #69-#84 and PROJECT_PLAN Week 4:
@@ -251,9 +251,7 @@ Per GitHub issues #69-#84 and PROJECT_PLAN Week 4:
    - README screenshots
 
 ### Known Issues
-- Frontend needs chaos UI integration
-- No deployment config yet
 - No real production database (still DuckDB)
 - Only 3 curated scenarios
 - No real ML model (rule-based only)
-- Methodology page not built
+- Frontend PR review #88 identified API client error handling and methodology accuracy gaps (fixed in this update)

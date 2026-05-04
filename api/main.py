@@ -15,13 +15,15 @@ from api.models import (
     SimulationSummary,
     ChaosModifierRequest,
 )
-from sim.chaos import ChaosEngine, ChaosModifier
-
 app = FastAPI(title="Undercut API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://undercut.vercel.app",
+        "https://*.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -155,6 +157,9 @@ def submit_decision(decision_id: str, request: DecisionRequest):
         row["actual_decision"],
     )
 
+    tire_risk = "high" if context.stint_age > 25 else "medium" if context.stint_age > 18 else "low"
+    track_position_risk = "high" if sim_result.risk_score > 0.7 else "medium" if sim_result.risk_score > 0.4 else "low"
+
     return DecisionResponse(
         scenario_id=row["decision_point_id"],
         user_action=request.action,
@@ -168,6 +173,8 @@ def submit_decision(decision_id: str, request: DecisionRequest):
             expected_position=sim_result.expected_position,
             expected_finish_position_band=score_data.get("expected_finish_position_band"),
             risk_score=sim_result.risk_score,
+            tire_risk=tire_risk,
+            track_position_risk=track_position_risk,
         ),
         explanation=score_data["explanation"],
         tradeoffs=[],
@@ -219,7 +226,7 @@ def submit_chaos_decision(decision_id: str, request: ChaosModifierRequest):
     )
 
     chaos_engine = ChaosEngine()
-    modifiers = [ChaosModifier(**m) for m in request.modifiers]
+    modifiers = [ChaosModifier(**m.model_dump()) for m in request.modifiers]
     context = chaos_engine.apply_modifiers(context, modifiers)
 
     engine = UndercutEngine(circuit="interlagos")
@@ -235,6 +242,9 @@ def submit_chaos_decision(decision_id: str, request: ChaosModifierRequest):
         row["actual_decision"],
     )
 
+    tire_risk = "high" if context.stint_age > 25 else "medium" if context.stint_age > 18 else "low"
+    track_position_risk = "high" if sim_result.risk_score > 0.7 else "medium" if sim_result.risk_score > 0.4 else "low"
+
     return DecisionResponse(
         scenario_id=row["decision_point_id"],
         user_action=request.action,
@@ -248,6 +258,8 @@ def submit_chaos_decision(decision_id: str, request: ChaosModifierRequest):
             expected_position=sim_result.expected_position,
             expected_finish_position_band=score_data.get("expected_finish_position_band"),
             risk_score=sim_result.risk_score,
+            tire_risk=tire_risk,
+            track_position_risk=track_position_risk,
         ),
         explanation=score_data["explanation"],
         tradeoffs=[],

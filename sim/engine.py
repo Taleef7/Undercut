@@ -1,13 +1,12 @@
 """
 Core Simulation Engine - Orchestrates pit, tire, and scoring models.
 """
-from typing import Dict, List, Any
+from typing import Dict, Any
 from dataclasses import dataclass
 from .circuit_config import CIRCUIT_CONFIG
 from .pit_model import get_pit_loss, estimate_pit_delta
-from .tire_model import TireState, estimate_lap_time, get_degradation_multiplier, is_in_tire_cliff_zone
+from .tire_model import TireState, estimate_lap_time, is_in_tire_cliff_zone
 from .scoring import score_decision, StrategyDecision, ScenarioContext
-from ml.baselines import predict_pit_decision, predict_finish_position_band
 
 @dataclass
 class SimResult:
@@ -40,7 +39,9 @@ class UndercutEngine:
             base_lap_time_ms = 90000
         else:
             base_lap_time_ms = circuit_config["base_lap_time_ms"]
-        tire_state = TireState(compound=context.compound, stint_age=context.stint_age)
+
+        effective_stint_age = context.stint_age + getattr(context, 'modifier_stint_age_delta', 0)
+        tire_state = TireState(compound=context.compound, stint_age=effective_stint_age)
         est_lap_time = estimate_lap_time(
             base_lap_time_ms=base_lap_time_ms,
             tire_state=tire_state
@@ -48,7 +49,13 @@ class UndercutEngine:
 
         # 2. Calculate position impact if pitting
         if decision.action.startswith("pit_"):
-            pit_loss = get_pit_loss(self.circuit)
+            pit_loss = get_pit_loss(self.circuit) + getattr(context, 'modifier_pit_loss_delta', 0.0)
+            # Safety car / VSC further reduces effective pit loss
+            if context.safety_car_active:
+                pit_loss = max(0.0, pit_loss - 18.0)
+            elif context.virtual_safety_car_active:
+                pit_loss = max(0.0, pit_loss - 14.0)
+
             pos_delta = estimate_pit_delta(
                 current_position=context.position,
                 gap_ahead=context.gap_ahead,
@@ -59,17 +66,20 @@ class UndercutEngine:
         else:
             # stay_out or extend_stint
             # Simplified: expect to keep position unless tires are in cliff
-            if is_in_tire_cliff_zone(context.compound, context.stint_age):
+            if is_in_tire_cliff_zone(context.compound, effective_stint_age):
                 expected_pos = context.position + 1
             else:
                 expected_pos = context.position
 
         # 3. Simple risk assessment
         risk_score = 0.5 # Neutral
-        if decision.action == "stay_out" and context.stint_age > 25:
+        if decision.action == "stay_out" and effective_stint_age > 25:
             risk_score = 0.8 # High risk of cliff
         elif decision.action.startswith("pit_") and context.gap_ahead < 5.0:
             risk_score = 0.7 # High risk of rejoining in traffic
+
+        if context.rainfall:
+            risk_score = min(risk_score + 0.1, 1.0)
 
         return SimResult(
             expected_position=expected_pos,

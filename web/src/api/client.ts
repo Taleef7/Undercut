@@ -54,13 +54,19 @@ export interface DecisionResponse {
 
 export async function getScenarios(): Promise<ScenarioSummary[]> {
   const res = await fetch(`${API_BASE}/scenarios`);
-  if (!res.ok) throw new Error(`Failed to fetch scenarios: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 
 export async function getScenario(id: string): Promise<ScenarioDetail> {
   const res = await fetch(`${API_BASE}/scenarios/${id}`);
-  if (!res.ok) throw new Error(`Failed to fetch scenario: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 
@@ -75,7 +81,10 @@ export async function submitDecision(id: string, action: string): Promise<Decisi
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action }),
   });
-  if (!res.ok) throw new Error(`Failed to submit decision: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
 }
 
@@ -89,6 +98,9 @@ export async function submitChaosDecision(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action, modifiers }),
   });
-  if (!res.ok) throw new Error(`Failed to submit chaos decision: ${res.status}`);
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(errBody.detail || `HTTP ${res.status}`);
+  }
   return res.json();
 }

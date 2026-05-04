@@ -40,7 +40,7 @@ export default function Methodology() {
               Machine Learning
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Our v1 models are intentionally lightweight. We start with rule-based baselines, then layer on logistic regression, random forest, and XGBoost classifiers. We do not use deep learning or transformers — the goal is interpretability. Every pit-decision prediction is explained with SHAP values so you can see which signals (stint age, gap ahead, track temperature) drove the recommendation.
+              Our v1 models use rule-based baseline models with 5 pit-decision rules and 3 finish-position rules. Confidence scores are derived from rule coverage. We do not use deep learning or transformers — the goal is interpretability. v2 may add gradient-boosted models (XGBoost) with SHAP explainability.
             </p>
           </section>
 

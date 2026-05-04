@@ -88,7 +88,7 @@ uv run python -m ingest.run_pipeline validate --season 2024 --round 21
 | **Data Sources** | Jolpica API, OpenF1 API, FastF1 |
 | **Database** | DuckDB (file-based, 17 tables) |
 | **Backend** | FastAPI + Pydantic + uvicorn |
-| **Frontend** | React 18 + TypeScript + Vite |
+| **Frontend** | React 19 + TypeScript + Vite |
 | **Styling** | Tailwind CSS + shadcn/ui |
 | **ML** | Rule-based baselines (scikit-learn in v2) |
 | **Testing** | pytest (85 tests) |

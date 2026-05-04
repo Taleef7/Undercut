@@ -1,16 +1,15 @@
-import pytest
 from sim.scoring import ScenarioContext
 from ml.baselines import predict_pit_decision, predict_finish_position_band, TIRE_CLIFF_THRESHOLDS
 
 
-def test_predict_pit_safety_car_returns_stay_out():
+def test_predict_pit_safety_car_returns_pit_now():
     context = ScenarioContext(
         driver="VER", lap=32, position=2, compound="medium", stint_age=14,
         gap_ahead=1.2, gap_behind=4.8, laps_remaining=39, safety_car_active=True,
     )
     action, conf, reasons = predict_pit_decision(context)
-    assert action == "stay_out"
-    assert conf == 0.9
+    assert action == "pit_now"
+    assert conf == 0.85
     assert any("Safety car" in r for r in reasons)
 
 
