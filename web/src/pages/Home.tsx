@@ -237,10 +237,17 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Button className="w-full bg-papaya text-background hover:bg-papaya/90 font-heading uppercase tracking-wide">
+              <Button
+                className="w-full bg-papaya text-background hover:bg-papaya/90 font-heading uppercase tracking-wide"
+                onClick={() => navigate("/scenario/brazil_2024_lap32")}
+              >
                 Pit for Inters
               </Button>
-              <Button variant="outline" className="w-full border-border hover:border-papaya/50 font-heading uppercase tracking-wide">
+              <Button
+                variant="outline"
+                className="w-full border-border hover:border-papaya/50 font-heading uppercase tracking-wide"
+                onClick={() => navigate("/scenario/brazil_2024_lap32")}
+              >
                 Stay Out
               </Button>
             </div>
@@ -364,12 +371,11 @@ export default function Home() {
       <section className="relative px-6 py-20">
         <div className="max-w-2xl mx-auto">
           <div className="border border-border p-8 sm:p-12 text-center glow-border">
-            <h2 className="text-foreground mb-4">
+            <h2 className="text-foreground mb-4 max-w-lg mx-auto">
               Ready to make the call?
             </h2>
-            <p className="text-muted-foreground mb-8 max-w-md mx-auto font-sans">
-              Jump into a real race moment and see if you can out-strategize the
-              pit wall.
+            <p className="text-muted-foreground mb-8 max-w-lg mx-auto font-sans leading-relaxed">
+              Jump into a real race moment and see if you can out-strategize the pit wall.
             </p>
             <Button
               size="lg"

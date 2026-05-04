@@ -71,21 +71,43 @@ class UndercutEngine:
             else:
                 expected_pos = context.position
 
-        # 3. Simple risk assessment
-        risk_score = 0.5 # Neutral
+        # 3. Risk assessment with modifier awareness
+        risk_score = 0.5  # Neutral
         if decision.action == "stay_out" and effective_stint_age > 25:
-            risk_score = 0.8 # High risk of cliff
+            risk_score = 0.8  # High risk of cliff
         elif decision.action.startswith("pit_") and context.gap_ahead < 5.0:
-            risk_score = 0.7 # High risk of rejoining in traffic
+            risk_score = 0.7  # High risk of rejoining in traffic
 
-        if context.rainfall:
-            risk_score = min(risk_score + 0.1, 1.0)
+        # Modifiers dramatically shift risk
+        if context.rainfall or context.track_status == "wet":
+            if decision.action.startswith("pit_") and ("wet" in decision.action or "inter" in decision.action):
+                risk_score = max(risk_score - 0.3, 0.1)  # Much safer
+            elif not decision.action.startswith("pit_"):
+                risk_score = min(risk_score + 0.3, 1.0)  # Much riskier
+
+        if context.safety_car_active or context.virtual_safety_car_active:
+            if decision.action.startswith("pit_"):
+                risk_score = max(risk_score - 0.25, 0.1)  # SC pit is safer
+            else:
+                risk_score = min(risk_score + 0.15, 1.0)
+
+        if context.track_status == "red_flag":
+            if decision.action.startswith("pit_"):
+                risk_score = 0.05  # Essentially free
+            else:
+                risk_score = 0.9  # Missing free pit is very risky
+
+        if context.modifier_stint_age_delta > 0 and not decision.action.startswith("pit_"):
+            risk_score = min(risk_score + 0.2, 1.0)
+
+        if context.modifier_pit_loss_delta > 0 and decision.action.startswith("pit_"):
+            risk_score = min(risk_score + 0.15, 1.0)
 
         return SimResult(
             expected_position=expected_pos,
             estimated_lap_time=est_lap_time,
-            delta_to_historical=0.0, # Simplified for MVP
-            risk_score=risk_score
+            delta_to_historical=0.0,  # Simplified for MVP
+            risk_score=round(risk_score, 2)
         )
 
     def evaluate_strategy(

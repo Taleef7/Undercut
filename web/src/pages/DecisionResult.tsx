@@ -4,7 +4,8 @@ import { Button } from "../components/ui/button";
 import { Switch } from "../components/ui/switch";
 import type { ScenarioDetail, DecisionResponse, ChaosModifier } from "../api/client";
 import { submitChaosDecision } from "../api/client";
-import { RotateCcw, ArrowRight, Sparkles, Terminal, Activity, Zap } from "lucide-react";
+import { RotateCcw, ArrowRight, Sparkles, Terminal, Activity, Zap, ArrowLeft } from "lucide-react";
+import { getActionLabel } from "../lib/actionLabels";
 
 const GRADE_COLORS: Record<string, string> = {
   Masterful: "text-gold",
@@ -114,6 +115,15 @@ export default function DecisionResult() {
       <div className="absolute inset-0 scanlines pointer-events-none" />
 
       <div className="relative px-6 py-8 max-w-3xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={() => navigate(`/scenario/${scenario.decision_point_id}`)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-papaya transition-colors font-mono px-3 py-1.5 border border-border hover:border-papaya/30 mb-6"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Scenario</span>
+        </button>
+
         {/* Terminal chrome */}
         <div className="bg-card border border-border glow-border mb-6">
           <div className="flex items-center justify-between px-4 py-2 border-b border-border">
@@ -149,13 +159,13 @@ export default function DecisionResult() {
                 <div>
                   <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">Your Call</div>
                   <span className="font-heading text-foreground uppercase tracking-wide">
-                    {response.user_action.replace(/_/g, " ")}
+                    {getActionLabel(response.user_action)}
                   </span>
                 </div>
                 <div>
                   <div className="text-xs font-mono text-muted-foreground mb-1 uppercase">Real Team</div>
                   <span className="font-heading text-foreground uppercase tracking-wide">
-                    {response.historical_decision.replace(/_/g, " ")}
+                    {getActionLabel(response.historical_decision)}
                   </span>
                 </div>
               </div>
@@ -165,7 +175,7 @@ export default function DecisionResult() {
             <div className="flex items-center gap-3 mb-5">
               <div className="px-2 py-1 bg-secondary border border-border">
                 <span className="text-xs font-mono text-muted-foreground">
-                  MODEL: {response.model_recommendation.replace(/_/g, " ").toUpperCase()}
+                  MODEL: {getActionLabel(response.model_recommendation).toUpperCase()}
                 </span>
               </div>
               {response.model_confidence != null && (

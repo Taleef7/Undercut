@@ -19,14 +19,10 @@ import {
   Terminal,
   ArrowLeft,
   Activity,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-
-const ACTION_LABELS: Record<string, string> = {
-  pit_now_inter: "Pit for Inters",
-  pit_now_hard: "Pit for Hards",
-  stay_out: "Stay Out",
-  extend_stint: "Extend Stint",
-};
+import { getActionLabel } from "../lib/actionLabels";
 
 const COMPOUND_COLORS: Record<string, string> = {
   soft: "bg-red-500",
@@ -59,6 +55,7 @@ export default function ScenarioPlay() {
   const navigate = useNavigate();
   const location = useLocation();
   const [scenario, setScenario] = useState<ScenarioDetail | null>(null);
+  const [allScenarios, setAllScenarios] = useState<ScenarioDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -66,11 +63,19 @@ export default function ScenarioPlay() {
   const disabledAction = (location.state as { disabledAction?: string } | null)
     ?.disabledAction;
 
+  // Parse race key from scenario ID (e.g., "brazil_2024_lap32" -> "brazil_2024")
+  function getRaceKey(sid: string): string {
+    const match = sid.match(/^(.+)_lap\d+$/);
+    return match ? match[1] : sid;
+  }
+
   useEffect(() => {
     if (!id) return;
-    getScenario(id)
-      .then((data) => {
-        setScenario(data);
+    // Load current scenario and all scenarios for prev/next navigation
+    Promise.all([getScenario(id), getScenarios()])
+      .then(([scenarioData, scenariosData]) => {
+        setScenario(scenarioData);
+        setAllScenarios(scenariosData as ScenarioDetail[]);
         setLoading(false);
       })
       .catch((err) => {
@@ -78,6 +83,16 @@ export default function ScenarioPlay() {
         setLoading(false);
       });
   }, [id]);
+
+  const raceKey = scenario ? getRaceKey(scenario.decision_point_id) : "";
+  const raceScenarios = allScenarios
+    .filter((s) => getRaceKey(s.decision_point_id) === raceKey)
+    .sort((a, b) => a.lap_number - b.lap_number);
+  const currentRaceIndex = raceScenarios.findIndex(
+    (s) => s.decision_point_id === scenario?.decision_point_id
+  );
+  const hasPrev = currentRaceIndex > 0;
+  const hasNext = currentRaceIndex >= 0 && currentRaceIndex < raceScenarios.length - 1;
 
   const handleAction = async (action: string) => {
     if (!id) return;
@@ -137,14 +152,45 @@ export default function ScenarioPlay() {
       <div className="absolute inset-0 scanlines pointer-events-none" />
 
       <div className="relative px-6 py-8 max-w-4xl mx-auto">
-        {/* Back button */}
-        <button
-          onClick={() => navigate("/scenarios")}
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6 font-mono"
-        >
-          <ArrowLeft size={14} />
-          <span>Back to Scenarios</span>
-        </button>
+        {/* Header nav */}
+        <div className="flex items-center justify-between mb-6">
+          <button
+            onClick={() => navigate("/scenarios")}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-papaya transition-colors font-mono px-3 py-1.5 border border-border hover:border-papaya/30"
+          >
+            <ArrowLeft size={14} />
+            <span>Back to Scenarios</span>
+          </button>
+          <div className="flex items-center gap-2">
+            {hasPrev && (
+              <button
+                onClick={() =>
+                  navigate(`/scenario/${raceScenarios[currentRaceIndex - 1].decision_point_id}`)
+                }
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-papaya transition-colors font-mono px-3 py-1.5 border border-border hover:border-papaya/30"
+              >
+                <ChevronLeft size={12} />
+                Prev
+              </button>
+            )}
+            {raceScenarios.length > 0 && (
+              <span className="text-xs font-mono text-muted-foreground px-2">
+                {currentRaceIndex + 1} / {raceScenarios.length}
+              </span>
+            )}
+            {hasNext && (
+              <button
+                onClick={() =>
+                  navigate(`/scenario/${raceScenarios[currentRaceIndex + 1].decision_point_id}`)
+                }
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-papaya transition-colors font-mono px-3 py-1.5 border border-border hover:border-papaya/30"
+              >
+                Next
+                <ChevronRight size={12} />
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Terminal chrome header */}
         <div className="bg-card border border-border glow-border mb-6">
@@ -311,7 +357,7 @@ export default function ScenarioPlay() {
                       {submitting && !isDisabled ? (
                         <Loader2 className="animate-spin mr-2" size={16} />
                       ) : null}
-                      {ACTION_LABELS[action] ?? action}
+                      {getActionLabel(action)}
                     </Button>
                   );
                 })}
