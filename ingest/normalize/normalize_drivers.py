@@ -23,21 +23,19 @@ def normalize_drivers(db_path: Path, data_dir: Path) -> int:
             "driver_number": d.get("permanentNumber", ""),
             "driver_forename": d.get("givenName", ""),
             "driver_surname": d.get("familyName", ""),
+            "full_name": f"{d.get('givenName', '')} {d.get('familyName', '')}".strip(),
+            "nationality": d.get("nationality", ""),
             "source_system": "jolpica",
-            "data_version": "v0.1",
-            "record_hash": compute_record_hash(
-                "jolpica", d["driverId"], d.get("code", "")
-            ),
         })
 
     df = pd.DataFrame(rows)
     conn = duckdb.connect(str(db_path))
     conn.execute("""
         INSERT OR REPLACE INTO dim_driver
-            (driver_ref, driver_code, driver_number, driver_forename, driver_surname,
-             source_system, data_version, record_hash)
-        SELECT driver_ref, driver_code, driver_number, driver_forename, driver_surname,
-               source_system, data_version, record_hash
+            (driver_id, driver_ref, code, driver_number, first_name, last_name, full_name,
+             nationality, source_system)
+        SELECT driver_ref, driver_ref, driver_code, driver_number, driver_forename, driver_surname, full_name,
+               nationality, source_system
         FROM df
     """)
     conn.close()

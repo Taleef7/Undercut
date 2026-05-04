@@ -17,7 +17,7 @@ def db_path(tmp_path):
             except Exception:
                 pass
     conn.execute("""
-        INSERT OR REPLACE INTO dim_tyre_compound VALUES
+        INSERT OR REPLACE INTO dim_tyre_compound (tyre_compound_id, compound_label, compound_category, compound_code, compound_hardness_order, is_wet, is_intermediate, is_slick) VALUES
         (1, 'SOFT', 'slick', 'S', 5, false, false, false),
         (2, 'MEDIUM', 'slick', 'M', 3, false, false, false),
         (3, 'HARD', 'slick', 'H', 1, false, false, false),
@@ -26,9 +26,9 @@ def db_path(tmp_path):
         (99, 'UNKNOWN', 'slick', 'UNC', NULL, false, false, true)
     """)
     conn.execute("""
-        INSERT OR REPLACE INTO dim_driver VALUES
-        ('max_verstappen', 'VER', '33', 'Max', 'Verstappen', 'jolpica', NOW(), 'v0.1', 'abc123'),
-        ('lewis_hamilton', 'HAM', '44', 'Lewis', 'Hamilton', 'jolpica', NOW(), 'v0.1', 'def456')
+        INSERT OR REPLACE INTO dim_driver (driver_id, driver_ref, code, driver_number, first_name, last_name, full_name, nationality, source_system) VALUES
+        ('max_verstappen', 'max_verstappen', 'VER', 33, 'Max', 'Verstappen', 'Max Verstappen', 'Dutch', 'jolpica'),
+        ('lewis_hamilton', 'lewis_hamilton', 'HAM', 44, 'Lewis', 'Hamilton', 'Lewis Hamilton', 'British', 'jolpica')
     """)
     conn.close()
     return db

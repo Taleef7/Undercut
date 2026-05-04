@@ -9,8 +9,14 @@ class JolpicaClient(BaseClient):
 
     def fetch_raw_bootstrap(self, season: int) -> dict:
         return {
-            "drivers": self._get(f"{season}/drivers.json"),
-            "constructors": self._get(f"{season}/constructors.json"),
+            "drivers": self._get(
+                f"{season}/drivers.json",
+                filename=self.raw_dir / str(season) / "season" / "drivers.json"
+            ),
+            "constructors": self._get(
+                f"{season}/constructors.json",
+                filename=self.raw_dir / str(season) / "season" / "constructors.json"
+            ),
         }
 
     def fetch_raw(self, season: int, round: int) -> dict:
@@ -23,7 +29,11 @@ class JolpicaClient(BaseClient):
 
     def fetch_raw_all_time(self) -> dict:
         return {
-            "circuits": self._get("circuits.json", params={"limit": 100}),
+            "circuits": self._get(
+                "circuits.json",
+                params={"limit": 100},
+                filename=self.raw_dir / "all_time" / "circuits.json"
+            ),
         }
 
     def _get_all_paginated(self, subpath: str, params: dict | None = None) -> list:

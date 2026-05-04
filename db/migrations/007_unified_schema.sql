@@ -1,6 +1,27 @@
--- Test schema matching unified migration 007_unified_schema.sql
+-- Unified schema migration
+-- Creates all tables with columns exactly matching normalizer INSERT statements
+-- Drops and recreates tables to ensure consistency
 
-CREATE TABLE IF NOT EXISTS dim_season (
+DROP TABLE IF EXISTS fact_lap;
+DROP TABLE IF EXISTS fact_stint;
+DROP TABLE IF EXISTS fact_pit_stop;
+DROP TABLE IF EXISTS fact_position_sample;
+DROP TABLE IF EXISTS fact_session_result;
+DROP TABLE IF EXISTS fact_weather_sample;
+DROP TABLE IF EXISTS fact_race_control_event;
+DROP TABLE IF EXISTS fact_interval_sample;
+DROP TABLE IF EXISTS fact_driver_session_entry;
+DROP TABLE IF EXISTS dim_driver;
+DROP TABLE IF EXISTS dim_season;
+DROP TABLE IF EXISTS dim_meeting;
+DROP TABLE IF EXISTS dim_circuit;
+DROP TABLE IF EXISTS dim_session;
+DROP TABLE IF EXISTS dim_constructor;
+DROP TABLE IF EXISTS dim_tyre_compound;
+
+-- Dimension tables
+
+CREATE TABLE dim_season (
     season_id VARCHAR PRIMARY KEY,
     year INT,
     url VARCHAR,
@@ -10,7 +31,7 @@ CREATE TABLE IF NOT EXISTS dim_season (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS dim_meeting (
+CREATE TABLE dim_meeting (
     meeting_id VARCHAR PRIMARY KEY,
     season_id VARCHAR,
     round_number INT,
@@ -28,7 +49,7 @@ CREATE TABLE IF NOT EXISTS dim_meeting (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS dim_circuit (
+CREATE TABLE dim_circuit (
     circuit_id VARCHAR PRIMARY KEY,
     circuit_ref VARCHAR,
     circuit_name VARCHAR,
@@ -47,7 +68,7 @@ CREATE TABLE IF NOT EXISTS dim_circuit (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS dim_session (
+CREATE TABLE dim_session (
     session_id VARCHAR PRIMARY KEY,
     meeting_id VARCHAR,
     season_id VARCHAR,
@@ -66,7 +87,7 @@ CREATE TABLE IF NOT EXISTS dim_session (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS dim_constructor (
+CREATE TABLE dim_constructor (
     constructor_id VARCHAR PRIMARY KEY,
     constructor_ref VARCHAR,
     constructor_name VARCHAR,
@@ -77,7 +98,7 @@ CREATE TABLE IF NOT EXISTS dim_constructor (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS dim_driver (
+CREATE TABLE dim_driver (
     driver_id VARCHAR PRIMARY KEY,
     driver_ref VARCHAR,
     driver_number INT,
@@ -94,7 +115,7 @@ CREATE TABLE IF NOT EXISTS dim_driver (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS dim_tyre_compound (
+CREATE TABLE dim_tyre_compound (
     tyre_compound_id VARCHAR PRIMARY KEY,
     compound_label VARCHAR,
     compound_category VARCHAR,
@@ -106,7 +127,9 @@ CREATE TABLE IF NOT EXISTS dim_tyre_compound (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS fact_driver_session_entry (
+-- Fact tables
+
+CREATE TABLE fact_driver_session_entry (
     driver_session_entry_id VARCHAR PRIMARY KEY,
     session_id VARCHAR,
     meeting_id VARCHAR,
@@ -122,7 +145,7 @@ CREATE TABLE IF NOT EXISTS fact_driver_session_entry (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_session_result (
+CREATE TABLE fact_session_result (
     session_result_id VARCHAR PRIMARY KEY,
     session_id VARCHAR,
     driver_id VARCHAR,
@@ -140,10 +163,11 @@ CREATE TABLE IF NOT EXISTS fact_session_result (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_lap (
+CREATE TABLE fact_lap (
     session_id VARCHAR,
     driver_ref VARCHAR,
     lap_number INT,
+    PRIMARY KEY (session_id, driver_ref, lap_number),
     lap_time_ms DOUBLE,
     lap_time_seconds DOUBLE,
     tyre_compound_id VARCHAR,
@@ -154,14 +178,14 @@ CREATE TABLE IF NOT EXISTS fact_lap (
     source_system VARCHAR,
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_version VARCHAR,
-    record_hash VARCHAR,
-    PRIMARY KEY (session_id, driver_ref, lap_number)
+    record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_stint (
+CREATE TABLE fact_stint (
     session_id VARCHAR,
     driver_ref VARCHAR,
     stint_number INT,
+    PRIMARY KEY (session_id, driver_ref, stint_number),
     tyre_compound_id VARCHAR,
     compound_label_source VARCHAR,
     lap_start INT,
@@ -170,24 +194,23 @@ CREATE TABLE IF NOT EXISTS fact_stint (
     source_system VARCHAR,
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_version VARCHAR,
-    record_hash VARCHAR,
-    PRIMARY KEY (session_id, driver_ref, stint_number)
+    record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_pit_stop (
+CREATE TABLE fact_pit_stop (
     session_id VARCHAR,
     driver_ref VARCHAR,
     lap_number INT,
+    PRIMARY KEY (session_id, driver_ref, lap_number),
     pit_duration_seconds DOUBLE,
     pit_time VARCHAR,
     source_system VARCHAR,
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_version VARCHAR,
-    record_hash VARCHAR,
-    PRIMARY KEY (session_id, driver_ref, lap_number)
+    record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_weather_sample (
+CREATE TABLE fact_weather_sample (
     session_id VARCHAR,
     sample_time VARCHAR,
     air_temperature_c DOUBLE,
@@ -200,7 +223,7 @@ CREATE TABLE IF NOT EXISTS fact_weather_sample (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_race_control_event (
+CREATE TABLE fact_race_control_event (
     session_id VARCHAR,
     event_time VARCHAR,
     category VARCHAR,
@@ -214,7 +237,7 @@ CREATE TABLE IF NOT EXISTS fact_race_control_event (
     record_hash VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS fact_interval_sample (
+CREATE TABLE fact_interval_sample (
     interval_sample_id VARCHAR PRIMARY KEY,
     session_id VARCHAR,
     driver_id VARCHAR,
@@ -225,140 +248,4 @@ CREATE TABLE IF NOT EXISTS fact_interval_sample (
     ingested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_version VARCHAR,
     record_hash VARCHAR
-);
-
-CREATE TABLE IF NOT EXISTS race_state_driver_lap_fact (
-    race_state_driver_lap_id VARCHAR PRIMARY KEY,
-    session_id VARCHAR,
-    meeting_id VARCHAR,
-    season_id VARCHAR,
-    driver_id VARCHAR,
-    constructor_id VARCHAR,
-    lap_number INT,
-    race_lap_pct DOUBLE,
-    laps_remaining INT,
-    current_position INT,
-    starting_position INT,
-    positions_gained_lost INT,
-    gap_to_leader_seconds DOUBLE,
-    interval_ahead_seconds DOUBLE,
-    interval_behind_seconds DOUBLE,
-    driver_ahead_id VARCHAR,
-    driver_behind_id VARCHAR,
-    current_compound_id VARCHAR,
-    current_compound_label VARCHAR,
-    stint_number INT,
-    stint_age_laps INT,
-    total_pit_stops INT,
-    last_pit_lap INT,
-    lap_time_ms DOUBLE,
-    rolling_3_lap_avg_ms DOUBLE,
-    rolling_5_lap_avg_ms DOUBLE,
-    pace_delta_to_field_ms DOUBLE,
-    track_status_normalized VARCHAR,
-    safety_car_active_flag BOOLEAN,
-    virtual_safety_car_active_flag BOOLEAN,
-    red_flag_active_flag BOOLEAN,
-    rainfall_flag BOOLEAN,
-    air_temperature DOUBLE,
-    track_temperature DOUBLE,
-    pit_window_open_flag BOOLEAN,
-    is_pit_lap BOOLEAN,
-    undercut_threat_flag BOOLEAN,
-    overcut_opportunity_flag BOOLEAN,
-    source_coverage_quality VARCHAR,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS race_state_field_lap (
-    race_state_field_lap_id VARCHAR PRIMARY KEY,
-    session_id VARCHAR,
-    lap_number INT,
-    leader_driver_id VARCHAR,
-    total_running_drivers INT,
-    total_retired_drivers INT,
-    safety_car_active_flag BOOLEAN,
-    virtual_safety_car_active_flag BOOLEAN,
-    red_flag_active_flag BOOLEAN,
-    rainfall_flag BOOLEAN,
-    average_lap_time_ms DOUBLE,
-    median_lap_time_ms DOUBLE,
-    fastest_lap_time_ms DOUBLE,
-    number_on_soft INT,
-    number_on_medium INT,
-    number_on_hard INT,
-    number_on_intermediate INT,
-    number_on_wet INT,
-    field_spread_seconds DOUBLE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS race_state_decision_point (
-    decision_point_id VARCHAR PRIMARY KEY,
-    session_id VARCHAR,
-    driver_id VARCHAR,
-    lap_number INT,
-    decision_type VARCHAR,
-    scenario_title VARCHAR,
-    scenario_description VARCHAR,
-    available_actions_json VARCHAR,
-    actual_decision VARCHAR,
-    actual_outcome_summary VARCHAR,
-    explanation_short VARCHAR,
-    explanation_long VARCHAR,
-    current_position INT,
-    gap_ahead_seconds DOUBLE,
-    gap_behind_seconds DOUBLE,
-    compound VARCHAR,
-    stint_age_laps INT,
-    laps_remaining INT,
-    track_temperature_c DOUBLE,
-    air_temperature_c DOUBLE,
-    rainfall BOOLEAN,
-    track_status VARCHAR,
-    safety_car_active BOOLEAN,
-    virtual_safety_car_active BOOLEAN,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS feature_pit_decision (
-    feature_id VARCHAR PRIMARY KEY,
-    session_id VARCHAR,
-    driver_id VARCHAR,
-    lap_number INT,
-    laps_remaining INT,
-    current_position INT,
-    gap_ahead_seconds DOUBLE,
-    gap_behind_seconds DOUBLE,
-    stint_age_laps INT,
-    compound_hardness_order INT,
-    rolling_3_lap_avg_ms DOUBLE,
-    pace_delta_to_field_ms DOUBLE,
-    safety_car_active_flag BOOLEAN,
-    vsc_active_flag BOOLEAN,
-    rainfall_flag BOOLEAN,
-    track_temperature DOUBLE,
-    pit_loss_estimate_seconds DOUBLE,
-    actual_pitted_within_3_laps BOOLEAN,
-    final_position_after_pit INT,
-    feature_version VARCHAR DEFAULT 'v0.1',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS feature_undercut_opportunity (
-    feature_id VARCHAR PRIMARY KEY,
-    session_id VARCHAR,
-    driver_id VARCHAR,
-    target_driver_id VARCHAR,
-    lap_number INT,
-    gap_to_target_seconds DOUBLE,
-    target_stint_age_laps INT,
-    own_stint_age_laps INT,
-    own_compound VARCHAR,
-    target_compound VARCHAR,
-    pit_loss_estimate_seconds DOUBLE,
-    circuit_overtaking_difficulty DOUBLE,
-    undercut_succeeded BOOLEAN,
-    feature_version VARCHAR DEFAULT 'v0.1',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

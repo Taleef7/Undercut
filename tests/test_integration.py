@@ -18,16 +18,16 @@ def test_full_pipeline_smoke(tmp_path):
                 pass
 
     conn.execute("""
-        INSERT OR REPLACE INTO dim_driver VALUES
-        ('max_verstappen', 'VER', '33', 'Max', 'Verstappen', 'jolpica', NOW(), 'v0.1', 'h1'),
-        ('lewis_hamilton', 'HAM', '44', 'Lewis', 'Hamilton', 'jolpica', NOW(), 'v0.1', 'h2')
+        INSERT OR REPLACE INTO dim_driver (driver_id, driver_ref, code, driver_number, first_name, last_name, full_name, nationality, source_system) VALUES
+        ('max_verstappen', 'max_verstappen', 'VER', 33, 'Max', 'Verstappen', 'Max Verstappen', 'Dutch', 'jolpica'),
+        ('lewis_hamilton', 'lewis_hamilton', 'HAM', 44, 'Lewis', 'Hamilton', 'Lewis Hamilton', 'British', 'jolpica')
     """)
     conn.execute("""
-        INSERT OR REPLACE INTO dim_session VALUES
-        ('2024_21_R', '2024_21', 'R', 'Brazil GP Race', 69, 'jolpica', NOW(), 'v0.1', 's1')
+        INSERT OR REPLACE INTO dim_session (session_id, meeting_id, session_name, session_type, total_laps, source_system) VALUES
+        ('2024_21_R', '2024_21', 'Brazil GP Race', 'R', 69, 'jolpica')
     """)
     conn.execute("""
-        INSERT OR REPLACE INTO dim_tyre_compound VALUES
+        INSERT OR REPLACE INTO dim_tyre_compound (tyre_compound_id, compound_label, compound_category, compound_code, compound_hardness_order, is_wet, is_intermediate, is_slick) VALUES
         (1, 'SOFT', 'slick', 'S', 5, false, false, false),
         (2, 'MEDIUM', 'slick', 'M', 3, false, false, false),
         (99, 'UNKNOWN', 'slick', 'UNC', NULL, false, false, true)
@@ -39,7 +39,7 @@ def test_full_pipeline_smoke(tmp_path):
     assert n_results == 2
 
     conn = duckdb.connect(str(db))
-    df = conn.execute("SELECT * FROM fact_session_result").fetchdf()
+    df = conn.execute("SELECT * FROM fact_session_result ORDER BY position_order").fetchdf()
     assert len(df) == 2
     assert df.iloc[0]["position_order"] == 1
     assert df["record_hash"].notna().all()

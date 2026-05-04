@@ -27,6 +27,6 @@ def test_check_prerequisites_raises_when_empty(db_path):
 
 def test_check_prerequisites_passes_with_data(db_path):
     conn = duckdb.connect(str(db_path))
-    conn.execute("INSERT INTO race_state_driver_lap_fact (session_id, driver_ref, lap_number) VALUES ('2024_21_R', 'max_verstappen', 1)")
+    conn.execute("INSERT INTO race_state_driver_lap_fact (race_state_driver_lap_id, session_id, driver_id, lap_number) VALUES ('2024_21_R_max_verstappen_1', '2024_21_R', 'max_verstappen', 1)")
     conn.close()
     check_prerequisites("2024_21_R", db_path)

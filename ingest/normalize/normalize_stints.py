@@ -17,10 +17,10 @@ def normalize_stints(db_path: Path, data_dir: Path, meeting_key: int, session_ke
     driver_map = dict(zip(driver_map_df["driver_number"], driver_map_df["driver_ref"]))
 
     compound_map_df = conn.execute(
-        "SELECT compound_name, tyre_compound_id FROM dim_tyre_compound"
+        "SELECT compound_label, tyre_compound_id FROM dim_tyre_compound"
     ).fetchdf()
     compound_map = dict(zip(
-        compound_map_df["compound_name"].str.upper(),
+        compound_map_df["compound_label"].str.upper(),
         compound_map_df["tyre_compound_id"]
     ))
 
@@ -43,9 +43,9 @@ def normalize_stints(db_path: Path, data_dir: Path, meeting_key: int, session_ke
             "stint_number": stint_number,
             "tyre_compound_id": tyre_compound_id,
             "compound_label_source": compound_raw,
-            "lap_start": int(stint.get("lap_start", 0)),
-            "lap_end": int(stint.get("lap_end", 0)),
-            "tyre_age_at_start": int(stint.get("tyre_age_at_start", 0)),
+            "lap_start": int(stint.get("lap_start") or 0),
+            "lap_end": int(stint.get("lap_end") or 0),
+            "tyre_age_at_start": int(stint.get("tyre_age_at_start") or 0),
             "source_system": "openf1",
             "data_version": "v0.1",
             "record_hash": compute_record_hash(
