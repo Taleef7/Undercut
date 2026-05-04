@@ -74,6 +74,7 @@ export default function ScenarioPlay() {
 
   const handleAction = async (action: string) => {
     if (!id) return;
+    setError(null);
     setSubmitting(true);
     try {
       const response: DecisionResponse = await submitDecision(id, action);
@@ -92,7 +93,7 @@ export default function ScenarioPlay() {
     );
   }
 
-  if (error || !scenario) {
+  if (!scenario) {
     return (
       <div className="min-h-screen bg-background text-foreground flex items-center justify-center px-6">
         <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 max-w-md text-center">
@@ -240,6 +241,13 @@ export default function ScenarioPlay() {
             </p>
           </div>
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="mb-4 text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 text-sm">
+            {error}
+          </div>
+        )}
 
         {/* Actions */}
         <div className="space-y-3">
