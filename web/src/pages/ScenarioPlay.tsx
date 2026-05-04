@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { Button } from "../components/ui/button";
 import {
   getScenario,
+  getScenarios,
   submitDecision,
+  type ScenarioSummary,
   type ScenarioDetail,
   type DecisionResponse,
 } from "../api/client";
@@ -55,7 +57,7 @@ export default function ScenarioPlay() {
   const navigate = useNavigate();
   const location = useLocation();
   const [scenario, setScenario] = useState<ScenarioDetail | null>(null);
-  const [allScenarios, setAllScenarios] = useState<ScenarioDetail[]>([]);
+  const [allScenarios, setAllScenarios] = useState<ScenarioSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -75,7 +77,7 @@ export default function ScenarioPlay() {
     Promise.all([getScenario(id), getScenarios()])
       .then(([scenarioData, scenariosData]) => {
         setScenario(scenarioData);
-        setAllScenarios(scenariosData as ScenarioDetail[]);
+        setAllScenarios(scenariosData);
         setLoading(false);
       })
       .catch((err) => {

@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getScenarios, type ScenarioSummary } from "../api/client";
-import { Button } from "../components/ui/button";
-import { Loader2, ChevronRight, Flag, Terminal, Calendar } from "lucide-react";
-import { getActionLabel } from "../lib/actionLabels";
+import { Loader2, Flag, Terminal, Calendar, ArrowLeft, ChevronDown } from "lucide-react";
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   Easy: "text-strong",
@@ -29,12 +27,24 @@ export default function ScenarioSelect() {
   const [scenarios, setScenarios] = useState<ScenarioSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedRace, setExpandedRace] = useState<string | null>(null);
 
   useEffect(() => {
     getScenarios()
       .then((data) => {
         setScenarios(data);
         setLoading(false);
+        // Auto-expand the first race if there's only one
+        const groups = data.reduce<Record<string, ScenarioSummary[]>>((acc, s) => {
+          const key = getRaceKey(s.decision_point_id);
+          if (!acc[key]) acc[key] = [];
+          acc[key].push(s);
+          return acc;
+        }, {});
+        const raceKeys = Object.keys(groups).sort();
+        if (raceKeys.length === 1) {
+          setExpandedRace(raceKeys[0]);
+        }
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : "Failed to load scenarios");
@@ -63,12 +73,30 @@ export default function ScenarioSelect() {
     );
   }
 
+  const grouped = scenarios.reduce<Record<string, ScenarioSummary[]>>((acc, s) => {
+    const key = getRaceKey(s.decision_point_id);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(s);
+    return acc;
+  }, {});
+
+  const sortedRaces = Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
+
   return (
     <div className="min-h-screen bg-background text-foreground relative">
       <div className="absolute inset-0 grid-bg pointer-events-none" />
       <div className="absolute inset-0 scanlines pointer-events-none" />
 
       <div className="relative px-6 py-12 max-w-5xl mx-auto">
+        {/* Back button */}
+        <button
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-papaya transition-colors font-mono px-3 py-1.5 border border-border hover:border-papaya/30 mb-8"
+        >
+          <ArrowLeft size={14} />
+          <span>Back to Home</span>
+        </button>
+
         {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-3">
@@ -91,98 +119,79 @@ export default function ScenarioSelect() {
             <p className="text-muted-foreground text-xs mt-2">Run the ingestion pipeline to populate decision points.</p>
           </div>
         ) : (
-          <div className="space-y-10">
-            {Object.entries(
-              scenarios.reduce<Record<string, ScenarioSummary[]>>((acc, s) => {
-                const key = getRaceKey(s.decision_point_id);
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(s);
-                return acc;
-              }, {})
-            )
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([raceKey, raceScenarios]) => {
-                const sorted = raceScenarios.sort((a, b) => a.lap_number - b.lap_number);
-                return (
-                  <div key={raceKey}>
-                    {/* Race Header */}
-                    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-border">
-                      <Calendar size={16} className="text-papaya" />
-                      <h2 className="text-lg font-heading text-foreground">
+          <div className="space-y-6">
+            {sortedRaces.map(([raceKey, raceScenarios]) => {
+              const sorted = raceScenarios.sort((a, b) => a.lap_number - b.lap_number);
+              const isExpanded = expandedRace === raceKey;
+
+              return (
+                <div key={raceKey} className="border border-border bg-card">
+                  {/* Race Header — Click to expand */}
+                  <button
+                    onClick={() => setExpandedRace(isExpanded ? null : raceKey)}
+                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Calendar size={16} className="text-papaya shrink-0" />
+                      <h2 className="text-base font-heading text-foreground">
                         {formatRaceName(raceKey)}
                       </h2>
                       <span className="text-xs font-mono text-muted-foreground">
                         {sorted.length} scenario{sorted.length !== 1 ? "s" : ""}
                       </span>
                     </div>
+                    <ChevronDown
+                      size={16}
+                      className={`text-muted-foreground transition-transform shrink-0 ${isExpanded ? "rotate-180" : ""}`}
+                    />
+                  </button>
 
-                    {/* Scenario Grid for this race */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {sorted.map((scenario) => (
-                        <div
-                          key={scenario.decision_point_id}
-                          className="bg-card border border-border p-5 hover:border-papaya/30 transition-all cursor-pointer group glow-border"
-                          onClick={() => navigate(`/scenario/${scenario.decision_point_id}`)}
-                        >
-                          {/* Terminal chrome */}
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-2">
-                              <Terminal size={12} className="text-muted-foreground" />
-                              <span className="text-xs font-mono text-muted-foreground uppercase">
-                                {scenario.decision_point_id}
+                  {/* Expanded Scenario List */}
+                  {isExpanded && (
+                    <div className="border-t border-border px-5 py-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {sorted.map((scenario) => (
+                          <div
+                            key={scenario.decision_point_id}
+                            className="bg-secondary/20 border border-border p-4 hover:border-papaya/30 transition-all cursor-pointer group"
+                            onClick={() => navigate(`/scenario/${scenario.decision_point_id}`)}
+                          >
+                            <div className="flex items-start justify-between gap-3 mb-2">
+                              <h3 className="text-sm font-heading group-hover:text-papaya transition-colors leading-tight">
+                                {scenario.scenario_title}
+                              </h3>
+                              {scenario.difficulty_level && (
+                                <span className={`text-[10px] font-mono uppercase shrink-0 ${DIFFICULTY_COLORS[scenario.difficulty_level] ?? "text-muted-foreground"}`}>
+                                  {scenario.difficulty_level}
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-xs text-muted-foreground leading-relaxed mb-3 font-sans line-clamp-2">
+                              {scenario.scenario_description}
+                            </p>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-foreground bg-secondary px-1.5 py-0.5 border border-border">
+                                  Lap {scenario.lap_number}
+                                </span>
+                                <span className="text-xs font-mono text-muted-foreground capitalize">
+                                  {scenario.decision_type.replace(/_/g, " ")}
+                                </span>
+                              </div>
+                              <span className="text-xs font-mono text-muted-foreground">
+                                {scenario.driver_id}
                               </span>
                             </div>
-                            {scenario.difficulty_level && (
-                              <span className={`text-xs font-mono uppercase ${DIFFICULTY_COLORS[scenario.difficulty_level] ?? "text-muted-foreground"}`}>
-                                {scenario.difficulty_level}
-                              </span>
-                            )}
                           </div>
-
-                          <h3 className="text-lg font-heading mb-2 group-hover:text-papaya transition-colors">
-                            {scenario.scenario_title}
-                          </h3>
-
-                          <p className="text-sm text-muted-foreground leading-relaxed mb-4 font-sans line-clamp-2">
-                            {scenario.scenario_description}
-                          </p>
-
-                          <div className="flex items-center gap-2 mb-4 flex-wrap">
-                            <div className="px-2 py-0.5 bg-secondary border border-border">
-                              <span className="text-xs font-mono text-foreground">
-                                Lap {scenario.lap_number}
-                              </span>
-                            </div>
-                            <div className="px-2 py-0.5 bg-secondary border border-border">
-                              <span className="text-xs font-mono text-foreground capitalize">
-                                {scenario.decision_type.replace(/_/g, " ")}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {scenario.available_actions.map((action) => (
-                              <span
-                                key={action}
-                                className="text-xs font-mono px-2 py-1 bg-secondary/50 border border-border text-muted-foreground"
-                              >
-                                {getActionLabel(action)}
-                              </span>
-                            ))}
-                          </div>
-
-                          <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                            <span className="text-xs font-mono text-muted-foreground">
-                              Driver: {scenario.driver_id}
-                            </span>
-                            <ChevronRight size={14} className="text-muted-foreground group-hover:text-papaya transition-colors" />
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

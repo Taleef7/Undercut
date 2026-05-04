@@ -370,11 +370,11 @@ export default function Home() {
       {/* CTA */}
       <section className="relative px-6 py-20">
         <div className="max-w-2xl mx-auto">
-          <div className="border border-border p-8 sm:p-12 text-center glow-border">
-            <h2 className="text-foreground mb-4 max-w-lg mx-auto">
+          <div className="border border-border p-8 sm:p-12 text-center glow-border flex flex-col items-center">
+            <h2 className="text-foreground mb-4">
               Ready to make the call?
             </h2>
-            <p className="text-muted-foreground mb-8 max-w-lg mx-auto font-sans leading-relaxed">
+            <p className="text-muted-foreground mb-8 font-sans leading-relaxed">
               Jump into a real race moment and see if you can out-strategize the pit wall.
             </p>
             <Button
