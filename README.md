@@ -9,8 +9,8 @@ Undercut is an **unofficial Formula 1 strategy simulation** where users replay h
 
 ## Try It Out
 
-- **Live Demo**: [https://undercut.vercel.app](https://undercut.vercel.app) *(update after deploy)*
-- **API Docs**: [https://undercut-api.railway.app/docs](https://undercut-api.railway.app/docs) *(update after deploy)*
+- **Live Demo**: [https://web-epylqzraj-taleef7s-projects.vercel.app](https://web-epylqzraj-taleef7s-projects.vercel.app)
+- **API Docs**: [https://undercut-api-production.up.railway.app/docs](https://undercut-api-production.up.railway.app/docs)
 
 ## Features
 
