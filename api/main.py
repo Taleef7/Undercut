@@ -37,6 +37,39 @@ ROOT = Path(__file__).parent.parent
 DB_PATH = Path(os.environ.get("DUCKDB_PATH", ROOT / "data" / "undercut.db"))
 
 
+def _seed_decision_points():
+    """Auto-load decision points from YAML on startup if DB is empty."""
+    try:
+        conn = duckdb.connect(str(DB_PATH))
+        result = conn.execute(
+            "SELECT COUNT(*) FROM race_state_decision_point"
+        ).fetchone()
+        count = result[0] if result else 0
+        conn.close()
+
+        if count >= 12:
+            # Already seeded
+            return
+
+        # Load all YAML files
+        dp_dir = ROOT / "data" / "decision_points"
+        yaml_files = sorted(dp_dir.glob("*.yaml"))
+
+        from ingest.load_decision_points import load_decision_points
+
+        for yf in yaml_files:
+            load_decision_points(str(yf), str(DB_PATH))
+
+        print(f"[startup] Seeded decision points from {len(yaml_files)} YAML files")
+    except Exception as e:
+        print(f"[startup] Warning: failed to seed decision points: {e}")
+
+
+@app.on_event("startup")
+def startup_event():
+    _seed_decision_points()
+
+
 @app.get("/")
 def read_root():
     return {"message": "Undercut API is running"}

@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def load_decision_points(yaml_path: str, db_path: str):
-    """Loads decision points from YAML into DuckDB."""
+    """Loads decision points from a single YAML file into DuckDB."""
     with open(yaml_path, 'r') as f:
         data = yaml.safe_load(f)
 
@@ -17,7 +17,7 @@ def load_decision_points(yaml_path: str, db_path: str):
 
     if not decision_points:
         print("No decision points found in YAML.")
-        return
+        return 0
 
     conn = duckdb.connect(db_path)
 
@@ -66,11 +66,28 @@ def load_decision_points(yaml_path: str, db_path: str):
 
     print(f"Successfully loaded {len(decision_points)} decision points from {yaml_path}.")
     conn.close()
+    return len(decision_points)
+
+
+def load_all_decision_points(db_path: str):
+    """Loads all decision point YAML files from data/decision_points/ into DuckDB."""
+    dp_dir = Path(__file__).parent.parent / "data" / "decision_points"
+    yaml_files = sorted(dp_dir.glob("*.yaml"))
+
+    if not yaml_files:
+        print(f"No YAML files found in {dp_dir}")
+        return 0
+
+    total = 0
+    for yf in yaml_files:
+        total += load_decision_points(str(yf), db_path)
+
+    print(f"\nTotal decision points loaded: {total}")
+    return total
 
 
 if __name__ == "__main__":
     ROOT = Path(__file__).parent.parent
-    YAML_FILE = ROOT / "data" / "decision_points" / "brazil_2024.yaml"
     DB_FILE = ROOT / "data" / "undercut.db"
 
-    load_decision_points(str(YAML_FILE), str(DB_FILE))
+    load_all_decision_points(str(DB_FILE))
