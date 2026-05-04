@@ -64,6 +64,11 @@ export async function getScenario(id: string): Promise<ScenarioDetail> {
   return res.json();
 }
 
+export interface ChaosModifier {
+  modifier_type: string;
+  modifier_value?: number;
+}
+
 export async function submitDecision(id: string, action: string): Promise<DecisionResponse> {
   const res = await fetch(`${API_BASE}/scenarios/${id}/decision`, {
     method: "POST",
@@ -71,5 +76,19 @@ export async function submitDecision(id: string, action: string): Promise<Decisi
     body: JSON.stringify({ action }),
   });
   if (!res.ok) throw new Error(`Failed to submit decision: ${res.status}`);
+  return res.json();
+}
+
+export async function submitChaosDecision(
+  id: string,
+  action: string,
+  modifiers: ChaosModifier[]
+): Promise<DecisionResponse> {
+  const res = await fetch(`${API_BASE}/scenarios/${id}/chaos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, modifiers }),
+  });
+  if (!res.ok) throw new Error(`Failed to submit chaos decision: ${res.status}`);
   return res.json();
 }

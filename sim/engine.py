@@ -103,12 +103,20 @@ class UndercutEngine:
             sim_outcomes
         )
 
+        from ml.baselines import predict_pit_decision, predict_finish_position_band
+
+        model_rec, model_conf, model_features = predict_pit_decision(context)
+        finish_band, finish_conf, finish_reasons = predict_finish_position_band(context, user_sim)
+
         return {
             "score": score_data["score"],
             "grade": score_data["grade"],
             "explanation": score_data["explanation"],
-            "model_recommendation": score_data["model_recommendation"],
+            "model_recommendation": model_rec,
+            "model_confidence": round(model_conf, 2),
+            "model_top_features": model_features[:3],
             "expected_position": user_sim.expected_position,
+            "expected_finish_position_band": finish_band,
             "risk_score": user_sim.risk_score,
             "estimated_lap_time": user_sim.estimated_lap_time,
         }

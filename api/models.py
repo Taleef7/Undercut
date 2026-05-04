@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 
 
@@ -57,3 +57,8 @@ class DecisionResponse(BaseModel):
 class DecisionRequest(BaseModel):
     action: str
     compound: Optional[str] = None
+
+
+class ChaosModifierRequest(BaseModel):
+    action: str
+    modifiers: List[Dict[str, Any]] = []

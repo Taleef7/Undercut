@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { ScenarioDetail, DecisionResponse } from "@/api/client";
-import { RotateCcw, ArrowRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import type { ScenarioDetail, DecisionResponse, ChaosModifier } from "@/api/client";
+import { submitChaosDecision } from "@/api/client";
+import { RotateCcw, ArrowRight, Sparkles } from "lucide-react";
 
 const GRADE_COLORS: Record<string, string> = {
   Masterful: "text-gold",
@@ -26,6 +29,22 @@ function getRiskBarColor(score: number): string {
   return "bg-poor";
 }
 
+interface ModifierConfig {
+  key: string;
+  label: string;
+  defaultValue?: number;
+}
+
+const MODIFIERS: ModifierConfig[] = [
+  { key: "safety_car", label: "Safety Car" },
+  { key: "vsc", label: "Virtual Safety Car" },
+  { key: "rain_starts", label: "Rain Starts" },
+  { key: "tire_cliff_now", label: "Tire Cliff Now (+8 laps)" },
+  { key: "slow_pit_stop", label: "Slow Pit Stop (+3s)", defaultValue: 3 },
+  { key: "rival_pits_this_lap", label: "Rival Pits This Lap" },
+  { key: "red_flag", label: "Red Flag" },
+];
+
 export default function DecisionResult() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,6 +52,11 @@ export default function DecisionResult() {
     scenario?: ScenarioDetail;
     response?: DecisionResponse;
   } | null;
+
+  const [activeModifiers, setActiveModifiers] = useState<Record<string, boolean>>({});
+  const [chaosResult, setChaosResult] = useState<DecisionResponse | null>(null);
+  const [chaosLoading, setChaosLoading] = useState(false);
+  const [chaosError, setChaosError] = useState<string | null>(null);
 
   if (!state?.scenario || !state?.response) {
     return (
@@ -52,6 +76,35 @@ export default function DecisionResult() {
 
   const { scenario, response } = state;
   const sim = response.simulation_summary;
+
+  const toggleModifier = (key: string) => {
+    setActiveModifiers((prev) => ({ ...prev, [key]: !prev[key] }));
+    setChaosResult(null);
+    setChaosError(null);
+  };
+
+  const handleSimulateChaos = async () => {
+    const selected: ChaosModifier[] = MODIFIERS.filter((m) => activeModifiers[m.key]).map((m) => ({
+      modifier_type: m.key,
+      modifier_value: m.defaultValue,
+    }));
+
+    if (selected.length === 0) {
+      setChaosError("Select at least one modifier.");
+      return;
+    }
+
+    setChaosLoading(true);
+    setChaosError(null);
+    try {
+      const result = await submitChaosDecision(scenario.decision_point_id, response.user_action, selected);
+      setChaosResult(result);
+    } catch (err) {
+      setChaosError(err instanceof Error ? err.message : "Failed to simulate chaos scenario");
+    } finally {
+      setChaosLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground px-6 py-8">
@@ -164,7 +217,7 @@ export default function DecisionResult() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 mb-10">
           <Button
             variant="outline"
             className="flex-1"
@@ -184,6 +237,88 @@ export default function DecisionResult() {
             <ArrowRight size={16} className="mr-2" />
             Play Another
           </Button>
+        </div>
+
+        {/* Chaos Engine */}
+        <div className="border-t border-border pt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles size={18} className="text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">What if...?</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Toggle chaos modifiers to see how unexpected events would have changed the outcome of your decision.
+          </p>
+
+          <div className="bg-card border border-border rounded-xl p-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {MODIFIERS.map((m) => (
+                <div key={m.key} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-foreground">{m.label}</span>
+                  <Switch
+                    checked={!!activeModifiers[m.key]}
+                    onCheckedChange={() => toggleModifier(m.key)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {chaosError && (
+            <div className="text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3 text-sm mb-4">
+              {chaosError}
+            </div>
+          )}
+
+          <Button
+            onClick={handleSimulateChaos}
+            disabled={chaosLoading}
+            className="mb-6"
+          >
+            <Sparkles size={16} className="mr-2" />
+            {chaosLoading ? "Simulating..." : "Simulate Chaos"}
+          </Button>
+
+          {chaosResult && (
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="text-sm font-medium text-foreground mb-3">
+                Modified Result
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-3">
+                <div>
+                  <div className="text-xs text-muted-foreground">Score</div>
+                  <div className="text-lg font-semibold text-foreground">
+                    {chaosResult.score}
+                  </div>
+                  <div className={`text-xs font-medium ${getGradeColor(chaosResult.grade)}`}>
+                    {chaosResult.grade}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Expected Position</div>
+                  <div className="text-lg font-semibold text-foreground">
+                    P{chaosResult.simulation_summary.expected_position}
+                  </div>
+                </div>
+              </div>
+              <div className="mb-3">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>Risk Score</span>
+                  <span>{(chaosResult.simulation_summary.risk_score * 100).toFixed(0)}%</span>
+                </div>
+                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${getRiskBarColor(
+                      chaosResult.simulation_summary.risk_score
+                    )}`}
+                    style={{ width: `${chaosResult.simulation_summary.risk_score * 100}%` }}
+                  />
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {chaosResult.explanation}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
