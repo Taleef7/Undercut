@@ -373,3 +373,58 @@ Per GitHub issues #69-#84 and PROJECT_PLAN Week 4, remaining items:
 - No real production database (still DuckDB on Railway volume)
 - Only 3 curated scenarios (all Brazil 2024)
 - No real ML model (rule-based only)
+
+---
+
+## 2026-05-04 — Sprint D: Expand Decision Points (9 New Scenarios)
+
+### D1 — Added 3 New Races (9 Decision Points)
+All decision points have `race_state` values verified against FastF1 data.
+
+**Abu Dhabi 2021** (3 scenarios):
+- `abu_dhabi_2021_lap14` — PER in P2 on softs, early race defense vs HAM
+- `abu_dhabi_2021_lap53` — VER in P2 on hards, SC deployed, pit for softs gamble
+- `abu_dhabi_2021_lap56` — HAM leading on 42-lap hards, one-lap shootout vs VER on fresh softs
+
+**Singapore 2023** (3 scenarios):
+- `singapore_2023_lap20` — RUS in P3 on mediums, SC deployed for track surface
+- `singapore_2023_lap40` — ALO in P8 on hards, 20 laps old, extend or pit
+- `singapore_2023_lap43` — NOR in P3 on hards, consolidate or risk for fastest lap
+
+**Hungary 2022** (3 scenarios):
+- `hungary_2022_lap38` — SAI in P3 on mediums, Ferrari's infamous early pit blunder
+- `hungary_2022_lap47` — LEC in P4 on hards, push to defend vs conserve tires
+- `hungary_2022_lap51` — VER leading on mediums, P10-to-P1 charge complete
+
+### D2 — New Decision Types Added
+- `safety_car_pit` — SC deployed, pit or stay out (Abu Dhabi lap 53, Singapore lap 20)
+- `cover_undercut` — rival behind pitted, cover or not (Abu Dhabi lap 14)
+- `defend_position` — hold position against faster car (Abu Dhabi lap 56)
+- `late_race_attack` — push for overtake vs conserve (Hungary lap 51)
+
+### D3 — Decision Point Validator (TDD)
+- `ingest/validate/decision_points.py`: schema validation for all YAML decision points
+- Enforces: required fields, valid decision types (7 types), max 4 actions, action consistency
+- 6 test cases covering valid/invalid inputs, missing fields, action limits
+
+### D4 — Test-Driven Development
+- All validator tests written first (RED), then implemented (GREEN)
+- Integration test loads all 12 decision points into DuckDB and verifies count
+- FastF1 verification scripts: `scripts/fetch_verification_data.py`, `scripts/fetch_detailed.py`
+- Full test suite: **93 tests passing** (up from 85)
+
+### Commits
+- `feat: add DecisionPointValidator with TDD tests`
+- `data: add Abu Dhabi 2021, Singapore 2023, Hungary 2022 decision points with verified FastF1 data`
+
+### Current Scenario Count
+- **12 total decision points** across 4 races
+- Brazil 2024: 3
+- Abu Dhabi 2021: 3
+- Singapore 2023: 3
+- Hungary 2022: 3
+
+### Known Issues
+- No real production database (still DuckDB on Railway volume)
+- No real ML model (rule-based only)
+- Gap ahead/behind values in YAML are approximations (FastF1 interval data unavailable for these sessions)
