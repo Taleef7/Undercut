@@ -9,41 +9,7 @@ ROOT = Path(__file__).parent
 DB_PATH = Path(os.environ.get("DUCKDB_PATH", ROOT / "data" / "undercut.db"))
 MIGRATIONS_DIR = ROOT / "db" / "migrations"
 SEEDS_DIR = ROOT / "db" / "seeds"
-
-# Search for decision points YAML in multiple locations
-# (Railway volumes may shadow the data/ directory)
-DECISION_POINTS_PATHS = [
-    ROOT / "data" / "decision_points" / "brazil_2024.yaml",
-    ROOT / "db" / "seeds" / "brazil_2024.yaml",
-    Path("brazil_2024.yaml"),
-]
-
-
-def find_decision_points_yaml() -> Path:
-    """Find the decision points YAML file, checking multiple locations."""
-    for path in DECISION_POINTS_PATHS:
-        if path.exists():
-            print(f"  Found decision points at: {path}")
-            return path
-    
-    # Debug: print what we found
-    print("  ERROR: Could not find brazil_2024.yaml in any of these locations:")
-    for path in DECISION_POINTS_PATHS:
-        print(f"    - {path} (exists={path.exists()})")
-    
-    # List contents of relevant directories for debugging
-    for dirname in [ROOT / "data", ROOT / "db", ROOT / "db" / "seeds"]:
-        if dirname.exists():
-            print(f"  Contents of {dirname}:")
-            try:
-                for item in dirname.iterdir():
-                    print(f"    {item.name} {'(dir)' if item.is_dir() else '(file)'}")
-            except Exception as e:
-                print(f"    Error listing: {e}")
-        else:
-            print(f"  Directory does not exist: {dirname}")
-    
-    raise FileNotFoundError("brazil_2024.yaml not found in any expected location")
+DECISION_POINTS_DIR = ROOT / "data" / "decision_points"
 
 
 def db_exists_with_data() -> bool:
@@ -60,6 +26,20 @@ def db_exists_with_data() -> bool:
         return False
 
 
+def get_db_scenario_count() -> int:
+    if not DB_PATH.exists():
+        return 0
+    try:
+        conn = duckdb.connect(str(DB_PATH))
+        result = conn.execute(
+            "SELECT COUNT(*) FROM race_state_decision_point"
+        ).fetchone()
+        conn.close()
+        return result[0]
+    except Exception:
+        return 0
+
+
 def run_migrations(conn: duckdb.DuckDBPyConnection) -> None:
     sql_files = sorted(MIGRATIONS_DIR.glob("*.sql"))
     for sql_file in sql_files:
@@ -74,32 +54,52 @@ def run_seeds(conn: duckdb.DuckDBPyConnection) -> None:
         conn.execute(open(seed_file).read())
 
 
-def load_decision_points() -> None:
-    print("  Loading decision points...")
-    yaml_path = find_decision_points_yaml()
-    
+def load_all_decision_points() -> int:
+    """Load all decision point YAML files into the DB."""
+    dp_dir = DECISION_POINTS_DIR
+    if not dp_dir.exists():
+        print(f"  WARNING: Decision points directory not found: {dp_dir}")
+        return 0
+
+    yaml_files = sorted(dp_dir.glob("*.yaml"))
+    if not yaml_files:
+        print(f"  WARNING: No YAML files found in {dp_dir}")
+        return 0
+
     sys.path.insert(0, str(ROOT))
     from ingest.load_decision_points import load_decision_points as load_dp
-    load_dp(str(yaml_path), str(DB_PATH))
+
+    total = 0
+    for yf in yaml_files:
+        count = load_dp(str(yf), str(DB_PATH))
+        total += count
+
+    return total
 
 
 def init() -> None:
     print(f"[init_db] DB_PATH={DB_PATH}")
-    
-    if db_exists_with_data():
-        print("[init_db] Database already initialized with decision points.")
-        return
+    db_count = get_db_scenario_count()
+    print(f"[init_db] Current scenarios in DB: {db_count}")
 
-    print("[init_db] Database missing or empty. Initializing...")
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if not DB_PATH.exists():
+        print("[init_db] Database missing. Creating...")
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = duckdb.connect(str(DB_PATH))
+        run_migrations(conn)
+        run_seeds(conn)
+        conn.close()
+    else:
+        print("[init_db] Database exists.")
 
-    conn = duckdb.connect(str(DB_PATH))
-    run_migrations(conn)
-    run_seeds(conn)
-    conn.close()
-    load_decision_points()
+    # Always load/update decision points (INSERT OR REPLACE handles duplicates)
+    print("[init_db] Loading decision points from YAML files...")
+    loaded = load_all_decision_points()
+    new_count = get_db_scenario_count()
+    print(f"[init_db] Loaded {loaded} scenarios from YAML. Total in DB: {new_count}")
 
-    print("[init_db] Database initialized successfully!")
+    if new_count == 0:
+        print("[init_db] WARNING: No scenarios loaded! Check data/decision_points/")
 
 
 if __name__ == "__main__":
