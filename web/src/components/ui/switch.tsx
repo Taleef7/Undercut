@@ -1,5 +1,5 @@
 import * as SwitchPrimitive from "@base-ui/react/switch";
-import { cn } from "@/lib/utils";
+import { cn } from "../../lib/utils";
 
 interface SwitchProps extends Omit<SwitchPrimitive.Switch.Root.Props, "ref"> {
   checked: boolean;

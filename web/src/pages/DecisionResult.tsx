@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import type { ScenarioDetail, DecisionResponse, ChaosModifier } from "@/api/client";
-import { submitChaosDecision } from "@/api/client";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import { Switch } from "../components/ui/switch";
+import type { ScenarioDetail, DecisionResponse, ChaosModifier } from "../api/client";
+import { submitChaosDecision } from "../api/client";
 import { RotateCcw, ArrowRight, Sparkles } from "lucide-react";
 
 const GRADE_COLORS: Record<string, string> = {

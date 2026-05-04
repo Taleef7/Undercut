@@ -1,14 +1,14 @@
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
 import {
   getScenario,
   submitDecision,
   type ScenarioDetail,
   type DecisionResponse,
-} from "@/api/client";
-import StintTimeline from "@/components/StintTimeline";
+} from "../api/client";
+import StintTimeline from "../components/StintTimeline";
 import {
   ChevronUp,
   ChevronDown,

@@ -5,10 +5,10 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
 import { useEffect, useState } from "react";
-import { getScenarios, type ScenarioSummary } from "@/api/client";
+import { getScenarios, type ScenarioSummary } from "../api/client";
 
 function parseCircuitName(decisionPointId: string): string {
   const parts = decisionPointId.split("_");
