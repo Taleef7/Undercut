@@ -1,13 +1,49 @@
 """Auto-initialize the database on startup if missing or empty."""
 import duckdb
 import sys
+import os
 from pathlib import Path
 
 ROOT = Path(__file__).parent
-DB_PATH = ROOT / "data" / "undercut.db"
+# Allow overriding DB path via env var (useful for Railway volume mounts)
+DB_PATH = Path(os.environ.get("DUCKDB_PATH", ROOT / "data" / "undercut.db"))
 MIGRATIONS_DIR = ROOT / "db" / "migrations"
 SEEDS_DIR = ROOT / "db" / "seeds"
-DECISION_POINTS = ROOT / "data" / "decision_points" / "brazil_2024.yaml"
+
+# Search for decision points YAML in multiple locations
+# (Railway volumes may shadow the data/ directory)
+DECISION_POINTS_PATHS = [
+    ROOT / "data" / "decision_points" / "brazil_2024.yaml",
+    ROOT / "db" / "seeds" / "brazil_2024.yaml",
+    Path("brazil_2024.yaml"),
+]
+
+
+def find_decision_points_yaml() -> Path:
+    """Find the decision points YAML file, checking multiple locations."""
+    for path in DECISION_POINTS_PATHS:
+        if path.exists():
+            print(f"  Found decision points at: {path}")
+            return path
+    
+    # Debug: print what we found
+    print("  ERROR: Could not find brazil_2024.yaml in any of these locations:")
+    for path in DECISION_POINTS_PATHS:
+        print(f"    - {path} (exists={path.exists()})")
+    
+    # List contents of relevant directories for debugging
+    for dirname in [ROOT / "data", ROOT / "db", ROOT / "db" / "seeds"]:
+        if dirname.exists():
+            print(f"  Contents of {dirname}:")
+            try:
+                for item in dirname.iterdir():
+                    print(f"    {item.name} {'(dir)' if item.is_dir() else '(file)'}")
+            except Exception as e:
+                print(f"    Error listing: {e}")
+        else:
+            print(f"  Directory does not exist: {dirname}")
+    
+    raise FileNotFoundError("brazil_2024.yaml not found in any expected location")
 
 
 def db_exists_with_data() -> bool:
@@ -40,12 +76,16 @@ def run_seeds(conn: duckdb.DuckDBPyConnection) -> None:
 
 def load_decision_points() -> None:
     print("  Loading decision points...")
+    yaml_path = find_decision_points_yaml()
+    
     sys.path.insert(0, str(ROOT))
     from ingest.load_decision_points import load_decision_points as load_dp
-    load_dp(str(DECISION_POINTS), str(DB_PATH))
+    load_dp(str(yaml_path), str(DB_PATH))
 
 
 def init() -> None:
+    print(f"[init_db] DB_PATH={DB_PATH}")
+    
     if db_exists_with_data():
         print("[init_db] Database already initialized with decision points.")
         return

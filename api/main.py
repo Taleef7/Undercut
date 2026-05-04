@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import json
+import os
 import duckdb
 from pathlib import Path
 from sim.engine import UndercutEngine
@@ -29,7 +30,8 @@ app.add_middleware(
 )
 
 ROOT = Path(__file__).parent.parent
-DB_PATH = ROOT / "data" / "undercut.db"
+# Allow overriding DB path via env var (useful for Railway volume mounts)
+DB_PATH = Path(os.environ.get("DUCKDB_PATH", ROOT / "data" / "undercut.db"))
 
 
 @app.get("/")
