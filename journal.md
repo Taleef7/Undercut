@@ -143,10 +143,117 @@ Migration `005_corrections.sql`:
 
 ---
 
-## Next Sprint: C — Data Ingestion Expansion
-- C1: Jolpica REST client (`ingest/jolpica_client.py`)
-- C2: OpenF1 REST client (`ingest/openf1_client.py`)
-- C3: Normalization modules (10 files in `ingest/normalize/`)
-- C4: Race state builder (`ingest/build/build_race_state.py`)
-- C5: Feature store builder (`ingest/build/build_features.py`)
-- C6: CLI orchestration (`ingest/run_pipeline.py`)
+---
+
+## 2026-05-03 — Sprint C Completed: Full Data Pipeline
+
+### C1-C4: REST Clients + Normalization
+- `ingest/base_client.py`: ABC with cache-first `_get()`, exponential backoff with jitter (3 retries)
+- `ingest/jolpica_client.py`: 7 endpoints (circuits, drivers, constructors, results, qualifying, laps, pit stops), paginated lap fetching
+- `ingest/openf1_client.py`: 9 endpoints (meetings, sessions, laps, stints, pit, intervals, positions, weather, race control), dynamic key resolution
+- 4 dimension normalizers (circuits, drivers, constructors, sessions) + 6 fact normalizers (results, laps, stints, pit stops, weather, race control)
+- Source priority config for query-time deduplication (openf1=1, fastf1=2, jolpica=3)
+- All normalizers produce `record_hash` for idempotent upserts
+
+### C5-C6: Builders + CLI
+- `ingest/build/build_race_state.py`: `race_state_driver_lap_fact` (33 cols) + `race_state_field_lap` (18 cols), hard/soft prereq checks
+- `ingest/build/build_features.py`: `feature_pit_decision` + `feature_undercut_opportunity`
+- `ingest/run_pipeline.py`: 6 CLI commands (bootstrap, fetch-weekend, normalize, build-race-state, build-features, validate), `--force`, `--session R|Q`
+- `ingest/validate/`: 6 checks (null, unique, FK, lap range, record hash, row validation) + per-weekend report naming
+
+### Pipeline Validation (Brazil 2024 Round 21)
+- Bootstrap: 78 circuits, 25 drivers, 10 constructors
+- Fetch: Jolpica + OpenF1 (Race + Qualifying sessions)
+- Normalize: 1137 laps, 54 stints, 35 pit stops, 201 weather samples, 111 race control events
+- Build: 1137 driver_lap rows, 69 field_lap rows, 1137 pit_decision rows, 1137 undercut rows
+- Validate: 40 warnings (soft checks), 0 errors
+
+### Test Count
+- **68 tests passing** (up from 5)
+
+### PR
+- PR #86 created and merged
+
+---
+
+## 2026-05-03 — Sprint D+E+G: ML Baselines + Frontend + Chaos
+
+### D: Rule-Based ML Baselines (`ml/baselines.py`)
+- `predict_pit_decision()`: 5 prioritized rules (SC, rain, tire cliff, undercut threat, too late) + default
+- `predict_finish_position_band()`: 3 rules (pace delta, SC compression, gap to leader) + default
+- Confidence formula: `0.5 + 0.45 * (rules_fired / total)` capped at 0.95
+- 13 tests
+
+### G: Chaos Engine (`sim/chaos.py`)
+- `ChaosEngine.apply_modifier()`: 7 modifier types (safety_car, vsc, rain_starts, tire_cliff_now, slow_pit_stop, rival_pits_this_lap, red_flag)
+- Returns new `ScenarioContext` (immutable)
+- `POST /scenarios/{id}/chaos` endpoint added to API
+- 15 tests
+
+### E: Frontend Bootstrap + Core Pages
+- Vite + React 18 + TypeScript scaffolded
+- Tailwind CSS with dark mode (`darkMode: 'class'`) + custom F1 theme colors
+- shadcn/ui initialized (Button, Card, Badge components)
+- Typed API client (`src/api/client.ts`) with all endpoint wrappers
+- **ScenarioSelect.tsx**: responsive card grid, circuit name parsing, decision type badges
+- **ScenarioPlay.tsx**: driver/position display, gap cards with arrows, tire compound + cliff warning, track status badge, weather conditions, radio quote, stint timeline, action buttons
+- **DecisionResult.tsx**: score display, grade coloring, historical comparison, model recommendation, risk gauge, tradeoffs list, explanation, replay CTAs
+- **StintTimeline.tsx**: SVG bar with compound colors, current lap marker
+- Build passes with zero TypeScript errors
+
+### Integration
+- Engine now calls ML baselines for `model_recommendation`, `model_confidence`, `model_top_features`
+- API returns real ML predictions instead of placeholders
+- `docs/api_contract.md` updated with `/chaos` endpoint
+
+### PR
+- PR #87 created and merged (frontend bootstrap + core pages + Codex review fixes)
+
+### Test Count
+- **101 tests passing** (68 + 13 baselines + 15 chaos + 5 existing)
+
+---
+
+## Current Status
+
+### What's Working
+- ✅ Full data pipeline: raw → canonical → race_state → feature_store
+- ✅ API: 4 endpoints (health, list scenarios, get scenario, submit decision, chaos decision)
+- ✅ ML: rule-based baselines with explainable recommendations
+- ✅ Simulation: circuit-aware lap times, tire degradation, pit loss, position impact
+- ✅ Frontend: 3 core pages with dark theme, responsive layout, typed API client
+- ✅ Tests: 101 passing
+
+### What's Next (Week 4 — Chaos + Deploy + Polish)
+Per GitHub issues #69-#84 and PROJECT_PLAN Week 4:
+
+1. **Frontend polish** (#69-#72, #75)
+   - Chaos modifier toggles in DecisionResult
+   - "What if...?" section with SC, rain, slow stop options
+   - Alternate outcome display
+   - Disclaimer footer
+   - Methodology page
+
+2. **Deployment** (#76-#81)
+   - Railway backend (Dockerfile, Procfile, env vars)
+   - Vercel frontend (vercel.json, build config)
+   - Health check endpoint verification
+
+3. **Documentation** (#73-#75, #82-#84)
+   - README polish with screenshots
+   - Methodology page content
+   - Legal disclaimer
+   - Loom walkthrough script
+
+4. **Portfolio polish**
+   - 90-second demo video
+   - Custom domain setup
+   - README screenshots
+
+### Known Issues
+- Frontend needs chaos UI integration
+- No deployment config yet
+- No real production database (still DuckDB)
+- Only 3 curated scenarios
+- No real ML model (rule-based only)
+- Methodology page not built
