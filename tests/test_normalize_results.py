@@ -24,7 +24,7 @@ def test_normalize_results_loads_fixture(db_path):
     n = normalize_results(db_path, data_dir=Path("tests/fixtures"))
     assert n == 2
     conn = duckdb.connect(str(db_path))
-    rows = conn.execute("SELECT * FROM fact_session_result").fetchdf()
+    rows = conn.execute("SELECT * FROM fact_session_result ORDER BY position_order").fetchdf()
     conn.close()
     assert len(rows) == 2
     assert rows.iloc[0]["position_order"] == 1

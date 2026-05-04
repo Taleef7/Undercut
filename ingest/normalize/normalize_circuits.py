@@ -24,20 +24,16 @@ def normalize_circuits(db_path: Path, data_dir: Path) -> int:
             "lat": float(loc.get("lat", 0)),
             "lng": float(loc.get("long", 0)),
             "source_system": "jolpica",
-            "data_version": "v0.1",
-            "record_hash": compute_record_hash(
-                "jolpica", c["circuitId"], c.get("circuitName", "")
-            ),
         })
 
     df = pd.DataFrame(rows)
     conn = duckdb.connect(str(db_path))
     conn.execute("""
         INSERT OR REPLACE INTO dim_circuit
-            (circuit_ref, circuit_name, location, country, lat, lng,
-             source_system, data_version, record_hash)
-        SELECT circuit_ref, circuit_name, location, country, lat, lng,
-               source_system, data_version, record_hash
+            (circuit_id, circuit_ref, circuit_name, location, country, lat, lng,
+             source_system)
+        SELECT circuit_ref, circuit_ref, circuit_name, location, country, lat, lng,
+               source_system
         FROM df
     """)
     conn.close()

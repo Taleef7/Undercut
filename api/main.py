@@ -6,6 +6,7 @@ import duckdb
 from pathlib import Path
 from sim.engine import UndercutEngine
 from sim.scoring import StrategyDecision, ScenarioContext
+from sim.chaos import ChaosEngine, ChaosModifier
 from api.models import (
     ScenarioSummary,
     ScenarioDetail,
@@ -135,6 +136,10 @@ def submit_decision(decision_id: str, request: DecisionRequest):
         gap_ahead=float(gap_ahead),
         gap_behind=float(gap_behind),
         laps_remaining=int(row.get("laps_remaining") or 0),
+        safety_car_active=bool(row.get("safety_car_active", False)),
+        virtual_safety_car_active=bool(row.get("virtual_safety_car_active", False)),
+        rainfall=bool(row.get("rainfall", False)),
+        track_status=str(row.get("track_status", "green") or "green"),
     )
 
     engine = UndercutEngine(circuit="interlagos")

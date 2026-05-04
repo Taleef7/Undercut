@@ -17,10 +17,10 @@ def normalize_laps(db_path: Path, data_dir: Path, meeting_key: int, session_key:
     driver_map = dict(zip(driver_map_df["driver_number"], driver_map_df["driver_ref"]))
 
     compound_map_df = conn.execute(
-        "SELECT compound_name, tyre_compound_id FROM dim_tyre_compound"
+        "SELECT compound_label, tyre_compound_id FROM dim_tyre_compound"
     ).fetchdf()
     compound_map = dict(zip(
-        compound_map_df["compound_name"].str.upper(),
+        compound_map_df["compound_label"].str.upper(),
         compound_map_df["tyre_compound_id"]
     ))
 

@@ -19,7 +19,7 @@ DATA_DIR = Path(__file__).parent.parent / "data"
 DB_PATH = DATA_DIR / "undercut.db"
 
 ROUND_TO_CIRCUIT: dict[tuple[int, int], str] = {
-    (2024, 21): "brazilian grand prix",
+    (2024, 21): "são paulo grand prix",
     (2023, 15): "singapore grand prix",
     (2021, 22): "abu dhabi grand prix",
     (2022, 13): "hungarian grand prix",
@@ -40,9 +40,10 @@ def _resolve_openf1_keys(season: int, round_num: int, session_type: str) -> tupl
             sessions = client.get_sessions(meeting_key)
             for s in sessions:
                 s_type = s.get("session_type", "")
-                if session_type == "R" and s_type == "Race":
+                s_name = s.get("session_name", "")
+                if session_type == "R" and s_type == "Race" and s_name == "Race":
                     return meeting_key, s["session_key"]
-                elif session_type == "Q" and "Qualifying" in s_type:
+                elif session_type == "Q" and "Qualifying" in s_type and "Sprint" not in s_name:
                     return meeting_key, s["session_key"]
             return meeting_key, None
     return None, None

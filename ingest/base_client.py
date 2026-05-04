@@ -37,8 +37,8 @@ class BaseClient(ABC):
         return base
 
     def _get(self, subpath: str, params: dict | None = None,
-             filename: str | None = None) -> dict | None:
-        cache_path = filename if filename else self._cache_path(subpath, params)
+             filename: Path | str | None = None) -> dict | None:
+        cache_path = Path(filename) if filename else self._cache_path(subpath, params)
 
         if cache_path.exists():
             return json.loads(cache_path.read_text(encoding="utf-8"))

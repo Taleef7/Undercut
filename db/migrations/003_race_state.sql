@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS race_state_driver_lap_fact (
     air_temperature DOUBLE,
     track_temperature DOUBLE,
     pit_window_open_flag BOOLEAN,
+    is_pit_lap BOOLEAN,
     undercut_threat_flag BOOLEAN,
     overcut_opportunity_flag BOOLEAN,
     source_coverage_quality VARCHAR,

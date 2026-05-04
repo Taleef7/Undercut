@@ -7,6 +7,7 @@ from .circuit_config import CIRCUIT_CONFIG
 from .pit_model import get_pit_loss, estimate_pit_delta
 from .tire_model import TireState, estimate_lap_time, get_degradation_multiplier, is_in_tire_cliff_zone
 from .scoring import score_decision, StrategyDecision, ScenarioContext
+from ml.baselines import predict_pit_decision, predict_finish_position_band
 
 @dataclass
 class SimResult:
@@ -88,12 +89,12 @@ class UndercutEngine:
         """
         # Run simulation for user's choice
         user_sim = self.simulate_decision(user_decision, context, historical_decision)
-        
+
         # Create simulated outcomes for all possible actions for scoring
         # (Simplified for MVP: just user vs historical)
         sim_outcomes = {
             user_decision.action: user_sim.expected_position,
-            historical_decision: context.position # Assume historical was optimal
+            historical_decision: context.position  # Assume historical was optimal
         }
 
         score_data = score_decision(

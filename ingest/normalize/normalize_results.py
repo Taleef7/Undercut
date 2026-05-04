@@ -50,12 +50,12 @@ def normalize_results(db_path: Path, data_dir: Path) -> int:
     conn = duckdb.connect(str(db_path))
     conn.execute("""
         INSERT OR REPLACE INTO fact_session_result
-            (session_id, driver_ref, constructor_ref, classified_position,
+            (session_result_id, session_id, driver_id, constructor_id, classified_position,
              position_order, grid_position, points, laps_completed, status,
-             time_millis, time_gap, source_system, data_version, record_hash)
-        SELECT session_id, driver_ref, constructor_ref, classified_position,
+             time_milliseconds, source_system, data_version, record_hash)
+        SELECT session_id || '_' || driver_ref, session_id, driver_ref, constructor_ref, classified_position,
                position_order, grid_position, points, laps_completed, status,
-               time_millis, time_gap, source_system, data_version, record_hash
+               time_millis, source_system, data_version, record_hash
         FROM df
     """)
     conn.close()
