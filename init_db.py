@@ -41,8 +41,8 @@ def run_seeds(conn: duckdb.DuckDBPyConnection) -> None:
 def load_decision_points() -> None:
     print("  Loading decision points...")
     sys.path.insert(0, str(ROOT))
-    from ingest.load_decision_points import load
-    load(str(DECISION_POINTS))
+    from ingest.load_decision_points import load_decision_points as load_dp
+    load_dp(str(DECISION_POINTS), str(DB_PATH))
 
 
 def init() -> None:
