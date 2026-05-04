@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "https://undercut-api-production.up.railway.app";
 
 export interface ScenarioSummary {
   decision_point_id: string;
