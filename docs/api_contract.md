@@ -14,6 +14,7 @@ Development: `http://localhost:8000`
 | `GET` | `/scenarios` | List all decision points |
 | `GET` | `/scenarios/{id}` | Detailed scenario with race state |
 | `POST` | `/scenarios/{id}/decision` | Submit a decision, get scored result |
+| `POST` | `/scenarios/{id}/chaos` | Submit a decision with chaos modifiers, get modified result |
 
 ## Health Check
 
@@ -172,6 +173,77 @@ Response (status 422):
 ### Error: Missing Scenario
 
 `POST /scenarios/nonexistent/decision` with `{"action": "stay_out"}`
+
+Response (status 404):
+```json
+{
+  "detail": "Scenario not found"
+}
+```
+
+## Submit Chaos Decision
+
+**`POST /scenarios/{id}/chaos`**
+
+Submit a user's strategy decision with one or more chaos modifiers applied, and receive a scored result based on the modified scenario context.
+
+### Request Body
+
+```json
+{
+  "action": "stay_out",
+  "modifiers": [
+    { "modifier_type": "safety_car", "modifier_value": 0.0 },
+    { "modifier_type": "rain_starts", "modifier_value": 0.0 }
+  ]
+}
+```
+
+- `action` (string, required): One of the `available_actions` for this scenario
+- `modifiers` (list[object], optional): Chaos modifiers to apply. Each modifier has:
+  - `modifier_type` (string): One of `safety_car`, `vsc`, `rain_starts`, `tire_cliff_now`, `slow_pit_stop`, `rival_pits_this_lap`, `red_flag`
+  - `modifier_value` (float): Numeric value for modifiers that require it (e.g. seconds for `slow_pit_stop`)
+
+### Response
+
+Same shape as `POST /scenarios/{id}/decision`:
+
+```json
+{
+  "scenario_id": "brazil_2024_lap32",
+  "user_action": "stay_out",
+  "score": 75,
+  "grade": "Strong call",
+  "historical_decision": "stay_out",
+  "model_recommendation": "stay_out",
+  "model_confidence": 0.6,
+  "model_top_features": ["No urgent signal to pit"],
+  "simulation_summary": {
+    "expected_position": 2,
+    "expected_finish_position_band": "P1-P3",
+    "risk_score": 0.5,
+    "tire_risk": null,
+    "track_position_risk": null
+  },
+  "explanation": "You made the same call as the real team!",
+  "tradeoffs": []
+}
+```
+
+### Error: Invalid Action
+
+`POST /scenarios/brazil_2024_lap32/chaos` with `{"action": "invalid", "modifiers": []}`
+
+Response (status 422):
+```json
+{
+  "detail": "Invalid action 'invalid'. Available: ['pit_now_inter', 'pit_now_hard', 'stay_out', 'extend_stint']"
+}
+```
+
+### Error: Missing Scenario
+
+`POST /scenarios/nonexistent/chaos` with `{"action": "stay_out", "modifiers": []}`
 
 Response (status 404):
 ```json

@@ -34,6 +34,13 @@ class ScenarioContext:
     gap_ahead: float
     gap_behind: float
     laps_remaining: int
+    safety_car_active: bool = False
+    virtual_safety_car_active: bool = False
+    rainfall: bool = False
+    track_status: str = "green"
+    modifier_pit_loss_delta: float = 0.0
+    modifier_stint_age_delta: int = 0
+    opponent_fresher_tires: bool = False
 
 
 def score_decision(
