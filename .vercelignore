@@ -1,32 +1,32 @@
 # Backend / Python - not needed for frontend deployment
-api/
-ingest/
-sim/
-ml/
-db/
-data/
+/api/
+/ingest/
+/sim/
+/ml/
+/db/
+/data/
 pyproject.toml
 uv.lock
 .python-version
 requirements*.txt
 
 # Git / CI
-.git/
-.github/
-.gitignore
+/.git/
+/.github/
+/.gitignore
 
 # Docs
-docs/
+/docs/
 *.md
 
 # Tests
-tests/
-pytest.ini
+/tests/
+/pytest.ini
 
 # Local configs
-.env
-.env.*
-.vercel/
+/.env
+/.env.*
+/.vercel/
 
 # Python artifacts
 __pycache__/
