@@ -1,6 +1,6 @@
 # Undercut API Contract
 
-> Last updated: 2026-05-03
+> Last updated: 2026-05-04
 
 ## Base URL
 
@@ -311,3 +311,61 @@ Extends ScenarioSummary with:
 | risk_score | float | Risk 0-1 (higher = riskier) |
 | tire_risk | str or None | Tire risk assessment |
 | track_position_risk | str or None | Track position risk |
+
+## POST /predict/pit-decision
+
+Direct ML model inference. Returns the trained XGBoost model's prediction for a specific session/driver/lap.
+
+### Request Body
+
+```json
+{
+    "session_id": "2024_21_R",
+    "driver_id": "44",
+    "lap_number": 32
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| session_id | str | Session identifier (e.g. "2024_21_R") |
+| driver_id | str | Driver number (e.g. "44") or 3-letter code (e.g. "VER") |
+| lap_number | int | Lap number to evaluate (1-indexed) |
+
+### Response (200)
+
+```json
+{
+    "session_id": "2024_21_R",
+    "driver_id": "44",
+    "lap_number": 32,
+    "recommendation": "stay_out",
+    "confidence": 0.71,
+    "probability_pit": 0.29,
+    "probability_stay": 0.71,
+    "top_features": [
+        "Stint age was the key signal",
+        "Track position was a significant factor",
+        "Rain conditions changed the pit calculus"
+    ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| session_id | str | Echoed from request |
+| driver_id | str | Echoed from request |
+| lap_number | int | Echoed from request |
+| recommendation | str | "pit_now" or "stay_out" |
+| confidence | float | Model confidence (0.5-1.0) |
+| probability_pit | float | Raw probability of pit decision |
+| probability_stay | float | Raw probability of stay-out decision |
+| top_features | list[str] | Top 3 SHAP feature explanations |
+
+### Error Responses
+
+| Status | Condition |
+|--------|-----------|
+| 404 | No data found for the session/driver/lap combination |
+| 422 | Feature mismatch between request and model expectations |
+| 503 | No trained model is available (fallback to baselines active) |
