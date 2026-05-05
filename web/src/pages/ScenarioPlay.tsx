@@ -71,6 +71,10 @@ export default function ScenarioPlay() {
     return match ? match[1] : sid;
   }
 
+  function formatRaceName(key: string): string {
+    return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) + " \u00B7 Race";
+  }
+
   useEffect(() => {
     if (!id) return;
     // Load current scenario and all scenarios for prev/next navigation
@@ -214,7 +218,7 @@ export default function ScenarioPlay() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <div className="text-xs font-mono text-muted-foreground mb-1 uppercase tracking-wider">
-                  Brazil 2024 · Race
+                  {formatRaceName(getRaceKey(scenario.decision_point_id))}
                 </div>
                 <h1 className="text-2xl font-heading">
                   Lap {scenario.lap_number} of {totalLaps}

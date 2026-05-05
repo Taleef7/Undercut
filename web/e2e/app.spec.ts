@@ -153,7 +153,7 @@ test.describe('Decision Result Page', () => {
     await page.goto('/scenario/brazil_2024_lap32');
     await page.getByTestId('action-button').first().click();
     await expect(page).toHaveURL('/result', { timeout: 30000 });
-    await expect(page.getByText(/Expected Position/)).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/Your Projected Finish/)).toBeVisible({ timeout: 15000 });
   });
 
   test('displays chaos engine section', async ({ page }) => {
@@ -195,14 +195,13 @@ test.describe('Chaos Engine', () => {
     await expect(page.getByText('Safety Car', { exact: true })).toBeVisible({ timeout: 15000 });
   });
 
-  test('simulate chaos with a modifier', async ({ page }) => {
+  test('chaos auto-updates when modifier toggled', async ({ page }) => {
     test.setTimeout(60000);
     await page.goto('/scenario/brazil_2024_lap32');
     await page.getByTestId('action-button').first().click();
     await expect(page).toHaveURL('/result', { timeout: 30000 });
     await page.getByTestId('chaos-toggle').first().click();
-    await page.getByTestId('chaos-simulate').click();
-    await expect(page.getByText(/Modified Result/i).or(page.getByText(/Score/).first())).toBeVisible({ timeout: 30000 });
+    await expect(page.getByText(/Modified Outcome/)).toBeVisible({ timeout: 30000 });
   });
 });
 
