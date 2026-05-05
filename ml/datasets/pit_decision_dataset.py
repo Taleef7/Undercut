@@ -40,7 +40,8 @@ class PitDecisionDataset:
         df = self._add_track_status(df, session_id)
         df = self._add_session_info(df, session_id)
 
-        feature_cols = [c for c in df.columns if c not in ("label", "driver_ref", "lap_number", "session_id")]
+        exclude = {"label", "driver_ref", "lap_number", "session_id", "lap_time"}
+        feature_cols = [c for c in df.columns if c not in exclude and df[c].dtype in ("int64", "float64", "bool")]
         df = df.dropna(subset=feature_cols, thresh=len(feature_cols) // 2)
         df = df.dropna(subset=["label"])
 
