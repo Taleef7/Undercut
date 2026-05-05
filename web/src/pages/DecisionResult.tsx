@@ -171,17 +171,31 @@ export default function DecisionResult() {
               </div>
             </div>
 
-            {/* Model rec */}
-            <div className="flex items-center gap-3 mb-5">
-              <div className="px-2 py-1 bg-secondary border border-border">
-                <span className="text-xs font-mono text-muted-foreground">
-                  MODEL: {getActionLabel(response.model_recommendation).toUpperCase()}
-                </span>
+            {/* Model rec + SHAP features */}
+            <div className="mb-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="px-2 py-1 bg-secondary border border-border">
+                  <span className="text-xs font-mono text-muted-foreground">
+                    MODEL: {getActionLabel(response.model_recommendation).toUpperCase()}
+                  </span>
+                </div>
+                {response.model_confidence != null && (
+                  <span className="text-sm font-mono text-muted-foreground">
+                    {(response.model_confidence * 100).toFixed(0)}% confidence
+                  </span>
+                )}
               </div>
-              {response.model_confidence != null && (
-                <span className="text-sm font-mono text-muted-foreground">
-                  {(response.model_confidence * 100).toFixed(0)}% confidence
-                </span>
+              {response.model_top_features && response.model_top_features.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {response.model_top_features.map((feat, i) => (
+                    <span
+                      key={i}
+                      className="text-[10px] font-mono px-1.5 py-0.5 bg-papaya/10 border border-papaya/20 text-papaya"
+                    >
+                      {feat}
+                    </span>
+                  ))}
+                </div>
               )}
             </div>
 
