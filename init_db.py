@@ -103,6 +103,23 @@ def init() -> None:
     if new_count == 0:
         print("[init_db] WARNING: No scenarios loaded!")
 
+    # Populate derived race state columns (positions, gaps, rolling avgs, etc.)
+    print("[init_db] Populating derived race state data...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, "-m", "ingest.build.populate_derived", "--session", "2024_21_R"],
+            cwd=str(ROOT), capture_output=True, text=True, timeout=120,
+        )
+        for line in result.stdout.splitlines():
+            print(f"  {line}")
+        if result.returncode != 0:
+            print(f"  WARNING: populate_derived stderr: {result.stderr[:200]}")
+        else:
+            print("[init_db] Derived race state data populated successfully")
+    except Exception as e:
+        print(f"  WARNING: Could not populate derived data: {e}")
+
     # Train the pit decision model so the API uses real ML, not fallback baselines
     print("[init_db] Training pit decision model...")
     try:
