@@ -57,7 +57,7 @@ const MODIFIERS: ModifierConfig[] = [
   { key: "rain_starts", label: "Rain Starts" },
   { key: "tire_cliff_now", label: "Tire Cliff (+8 laps)" },
   { key: "slow_pit_stop", label: "Slow Pit Stop (+3s)", defaultValue: 3 },
-  { key: "rival_pits_this_lab", label: "Rival Pits This Lap" },
+  { key: "rival_pits_this_lap", label: "Rival Pits This Lap" },
   { key: "red_flag", label: "Red Flag" },
 ];
 

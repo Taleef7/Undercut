@@ -103,6 +103,23 @@ def init() -> None:
     if new_count == 0:
         print("[init_db] WARNING: No scenarios loaded!")
 
+    # Train the pit decision model so the API uses real ML, not fallback baselines
+    print("[init_db] Training pit decision model...")
+    try:
+        import subprocess
+        result = subprocess.run(
+            [sys.executable, "-m", "ml.train", "--target", "pit_decision", "--data-version", "v0.1"],
+            cwd=str(ROOT), capture_output=True, text=True, timeout=120,
+        )
+        for line in result.stdout.splitlines():
+            print(f"  {line}")
+        if result.returncode != 0:
+            print(f"  WARNING: Model training stderr: {result.stderr[:200]}")
+        else:
+            print("[init_db] Pit decision model trained successfully")
+    except Exception as e:
+        print(f"  WARNING: Could not train model: {e}")
+
 
 if __name__ == "__main__":
     init()
