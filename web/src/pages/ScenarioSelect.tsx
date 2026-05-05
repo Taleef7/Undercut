@@ -128,6 +128,7 @@ export default function ScenarioSelect() {
                 <div key={raceKey} className="border border-border bg-card">
                   {/* Race Header — Click to expand */}
                   <button
+                    data-testid="race-group-header"
                     onClick={() => setExpandedRace(isExpanded ? null : raceKey)}
                     className="w-full flex items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors text-left"
                   >
@@ -153,6 +154,7 @@ export default function ScenarioSelect() {
                         {sorted.map((scenario) => (
                           <div
                             key={scenario.decision_point_id}
+                            data-testid="scenario-card"
                             className="bg-secondary/20 border border-border p-4 hover:border-papaya/30 transition-all cursor-pointer group"
                             onClick={() => navigate(`/scenario/${scenario.decision_point_id}`)}
                           >

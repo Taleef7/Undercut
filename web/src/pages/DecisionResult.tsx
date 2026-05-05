@@ -297,7 +297,7 @@ export default function DecisionResult() {
             <div className="bg-secondary/30 border border-border p-4 mb-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {MODIFIERS.map((m) => (
-                  <div key={m.key} className="flex items-center justify-between gap-3">
+                  <div key={m.key} data-testid="chaos-toggle" className="flex items-center justify-between gap-3">
                     <span className="text-sm text-foreground font-mono">{m.label}</span>
                     <Switch
                       checked={!!activeModifiers[m.key]}
@@ -315,6 +315,7 @@ export default function DecisionResult() {
             )}
 
             <Button
+              data-testid="chaos-simulate"
               onClick={handleSimulateChaos}
               disabled={chaosLoading}
               className="mb-6 bg-papaya text-background hover:bg-papaya/90 font-heading uppercase tracking-wide"

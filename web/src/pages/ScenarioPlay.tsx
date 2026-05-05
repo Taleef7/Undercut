@@ -220,7 +220,7 @@ export default function ScenarioPlay() {
                   Lap {scenario.lap_number} of {totalLaps}
                 </h1>
               </div>
-              <div className={`px-3 py-1 ${trackStatusStyle.bg} border ${trackStatusStyle.border}`}>
+              <div data-testid="track-status-badge" className={`px-3 py-1 ${trackStatusStyle.bg} border ${trackStatusStyle.border}`}>
                 <span className={`text-xs font-mono uppercase tracking-wider ${trackStatusStyle.text}`}>
                   {rs.track_status.replace(/_/g, " ")}
                 </span>
@@ -307,9 +307,9 @@ export default function ScenarioPlay() {
             </div>
 
             {/* Timeline */}
-            <div className="mb-5">
-              <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">Stint Timeline</div>
-              <StintTimeline
+              <div className="mb-5" data-testid="stint-timeline">
+                <div className="text-xs font-mono text-muted-foreground mb-2 uppercase">Stint Timeline</div>
+                <StintTimeline
                 totalLaps={totalLaps}
                 currentLap={scenario.lap_number}
                 compound={rs.compound}
@@ -346,6 +346,7 @@ export default function ScenarioPlay() {
                   return (
                     <Button
                       key={action}
+                      data-testid="action-button"
                       variant={isDisabled ? "outline" : "default"}
                       size="lg"
                       disabled={isDisabled || submitting}
