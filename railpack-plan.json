@@ -1,9 +1,0 @@
-{
-  "providers": ["python"],
-  "variables": {
-    "MISE_AQUA_GITHUB_ATTESTATIONS": "false",
-    "MISE_AQUA_COSIGN": "false",
-    "MISE_AQUA_SLSA": "false",
-    "MISE_AQUA_MINISIGN": "false"
-  }
-}
