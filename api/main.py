@@ -16,7 +16,9 @@ from api.models import (
     SimulationSummary,
     ChaosModifierRequest,
 )
+from api.routers.prediction import router as prediction_router
 app = FastAPI(title="Undercut API")
+app.include_router(prediction_router)
 
 # CORS: allow comma-separated origins via env var, fallback to wildcard in production
 _cors_origins_str = os.environ.get("CORS_ORIGINS", "")

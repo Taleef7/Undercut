@@ -78,3 +78,20 @@ class ChaosModifierItem(BaseModel):
 class ChaosModifierRequest(BaseModel):
     action: str
     modifiers: List[ChaosModifierItem] = []
+
+
+class PitDecisionRequest(BaseModel):
+    session_id: str
+    driver_id: str
+    lap_number: int
+
+
+class PitDecisionResponse(BaseModel):
+    session_id: str
+    driver_id: str
+    lap_number: int
+    recommendation: str
+    confidence: float
+    probability_pit: float
+    probability_stay: float
+    top_features: List[str] = []
