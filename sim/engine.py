@@ -137,8 +137,45 @@ class UndercutEngine:
         )
 
         from ml.baselines import predict_pit_decision, predict_finish_position_band
+        from ml.registry import load_model_artifacts
 
-        model_rec, model_conf, model_features = predict_pit_decision(context)
+        trained_model = None
+        try:
+            artifacts = load_model_artifacts("pit_decision")
+            if artifacts:
+                trained_model = artifacts["model"]
+        except Exception:
+            trained_model = None
+
+        if trained_model and hasattr(trained_model, "feature_names"):
+            try:
+                import pandas as pd
+                feat_dict = {
+                    "stint_age_laps": context.stint_age,
+                    "compound_hardness": {"soft": 1, "medium": 2, "hard": 3, "intermediate": 4, "wet": 5}.get(context.compound.lower(), 3),
+                    "is_wet_compound": 1 if context.compound.lower() in ("intermediate", "wet") else 0,
+                    "lap_time_ms": 90000.0,
+                    "rolling_3_lap_avg_ms": None,
+                    "is_pit_out_lap": 0,
+                    "approx_position": context.position,
+                    "laps_remaining": context.laps_remaining,
+                    "rainfall_flag": 1 if context.rainfall else 0,
+                    "air_temperature_c": None,
+                    "track_temperature_c": None,
+                    "red_flag": 0,
+                    "yellow_flag": 0,
+                }
+                if len([f for f in trained_model.feature_names if f in feat_dict]) == len(trained_model.feature_names):
+                    X = pd.DataFrame([{k: feat_dict.get(k) for k in trained_model.feature_names}])
+                    model_rec, model_conf = trained_model.predict(X)
+                    model_features = trained_model.explain(X)
+                else:
+                    raise ValueError("Feature mismatch")
+            except Exception:
+                model_rec, model_conf, model_features = predict_pit_decision(context)
+        else:
+            model_rec, model_conf, model_features = predict_pit_decision(context)
+
         finish_band, finish_conf, finish_reasons = predict_finish_position_band(context, user_sim)
 
         return {
