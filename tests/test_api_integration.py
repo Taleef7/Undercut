@@ -114,7 +114,7 @@ class TestGetScenario:
 
     def test_get_all_12_scenarios_individually(self):
         ids = [
-            "brazil_2024_lap32", "brazil_2024_lap48", "brazil_2024_lap68",
+            "brazil_2024_lap32", "brazil_2024_lap43", "brazil_2024_lap65",
             "abu_dhabi_2021_lap14", "abu_dhabi_2021_lap53", "abu_dhabi_2021_lap56",
             "singapore_2023_lap20", "singapore_2023_lap40", "singapore_2023_lap43",
             "hungary_2022_lap38", "hungary_2022_lap47", "hungary_2022_lap51",
@@ -126,11 +126,11 @@ class TestGetScenario:
 
 class TestSubmitDecision:
     def test_submit_valid_decision_returns_200(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         assert resp.status_code == 200
 
     def test_submit_decision_returns_decision_response_shape(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         data = resp.json()
         assert "scenario_id" in data
         assert "user_action" in data
@@ -143,18 +143,18 @@ class TestSubmitDecision:
         assert "tradeoffs" in data
 
     def test_submit_decision_score_is_in_range(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         data = resp.json()
         assert 0 <= data["score"] <= 100
 
     def test_submit_decision_grade_is_valid(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         data = resp.json()
         valid_grades = {"Masterful", "Strong call", "Inspired call", "Risky", "Poor call", "Off the wall"}
         assert data["grade"] in valid_grades
 
     def test_submit_decision_model_fields_present(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         data = resp.json()
         assert "model_recommendation" in data
         assert "model_confidence" in data
@@ -162,7 +162,7 @@ class TestSubmitDecision:
         assert isinstance(data["model_top_features"], list)
 
     def test_submit_decision_simulation_summary(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         data = resp.json()
         sim = data["simulation_summary"]
         assert "expected_position" in sim
@@ -184,10 +184,10 @@ class TestSubmitDecision:
         assert resp.status_code == 404
 
     def test_submit_pit_action_works(self):
-        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "pit_now_inter"})
+        resp = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "used_inters"})
         assert resp.status_code == 200
         data = resp.json()
-        assert data["user_action"] == "pit_now_inter"
+        assert data["user_action"] == "used_inters"
 
     def test_submit_all_scenarios_all_actions(self):
         # Test first action of each scenario to ensure all work
@@ -208,14 +208,14 @@ class TestSubmitDecision:
 class TestChaosEndpoint:
     def test_submit_chaos_returns_200(self):
         resp = client.post("/scenarios/brazil_2024_lap32/chaos", json={
-            "action": "stay_out",
+            "action": "fresh_inters",
             "modifiers": [{"modifier_type": "safety_car", "modifier_value": 0.0}],
         })
         assert resp.status_code == 200
 
     def test_submit_chaos_returns_decision_response_shape(self):
         resp = client.post("/scenarios/brazil_2024_lap32/chaos", json={
-            "action": "stay_out",
+            "action": "fresh_inters",
             "modifiers": [{"modifier_type": "safety_car", "modifier_value": 0.0}],
         })
         data = resp.json()
@@ -245,7 +245,7 @@ class TestChaosEndpoint:
             {"modifier_type": "red_flag", "modifier_value": 0.0},
         ]
         resp = client.post("/scenarios/brazil_2024_lap32/chaos", json={
-            "action": "pit_now_inter",
+            "action": "fresh_inters",
             "modifiers": modifiers,
         })
         assert resp.status_code == 200
@@ -265,11 +265,11 @@ class TestChaosEndpoint:
         assert resp.status_code == 404
 
     def test_submit_chaos_modifier_changes_outcome(self):
-        base = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "stay_out"})
+        base = client.post("/scenarios/brazil_2024_lap32/decision", json={"action": "fresh_inters"})
         base_data = base.json()
 
         chaos = client.post("/scenarios/brazil_2024_lap32/chaos", json={
-            "action": "stay_out",
+            "action": "fresh_inters",
             "modifiers": [{"modifier_type": "safety_car", "modifier_value": 0.0}],
         })
         chaos_data = chaos.json()
@@ -353,9 +353,9 @@ class TestPredictEndpoint:
 
 class TestCrossRaceFlows:
     def test_brazil_decision(self):
-        resp = client.post("/scenarios/brazil_2024_lap48/decision", json={"action": "stay_inter"})
+        resp = client.post("/scenarios/brazil_2024_lap43/decision", json={"action": "push_for_lead"})
         assert resp.status_code == 200
-        assert resp.json()["scenario_id"] == "brazil_2024_lap48"
+        assert resp.json()["scenario_id"] == "brazil_2024_lap43"
 
     def test_abu_dhabi_decision(self):
         resp = client.post("/scenarios/abu_dhabi_2021_lap53/decision", json={"action": "stay_out"})

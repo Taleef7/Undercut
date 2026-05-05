@@ -210,7 +210,7 @@ test.describe('Chaos Engine', () => {
 // ============================================================
 test.describe('All Scenarios Playable', () => {
   const scenarioIds = [
-    'brazil_2024_lap32', 'brazil_2024_lap48', 'brazil_2024_lap68',
+    'brazil_2024_lap32', 'brazil_2024_lap43', 'brazil_2024_lap65',
     'abu_dhabi_2021_lap14', 'abu_dhabi_2021_lap53', 'abu_dhabi_2021_lap56',
     'singapore_2023_lap20', 'singapore_2023_lap40', 'singapore_2023_lap43',
     'hungary_2022_lap38', 'hungary_2022_lap47', 'hungary_2022_lap51',

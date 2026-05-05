@@ -2,97 +2,122 @@
   session_id: "R"
   driver_id: "VER"
   lap_number: 32
-  decision_type: "pit_now_vs_stay_out"
-  scenario_title: "VER vs NOR battle - pit decision under pressure"
+  decision_type: "safety_car_pit"
+  scenario_title: "Red Flag at Interlagos — tire choice for the restart"
   scenario_description: |
-    Lap 32 of the 2024 Brazilian GP. Verstappen is pressuring Norris for P2.
-    Your driver is VER. Medium tires are 14 laps old. Gap to Norris is 1.2 seconds.
-    Rain is starting to fall. Team asks: pit now or stay out?
+    Lap 32 of the 2024 Brazilian GP. A red flag has been deployed. All cars are
+    lined up in the pit lane and the race is suspended. Your driver is VER in P2,
+    on intermediate tires that are 32 laps old. The track is drying — it hasn't
+    rained for 11 laps and the temperature is rising. Under the red flag, tire
+    changes are free (no pit loss). Team asks: what compound do you fit for the restart?
   available_actions:
-    - "pit_now_inter"
-    - "pit_now_hard"
-    - "stay_out"
-    - "extend_stint"
-  actual_decision: "stay_out"
-  actual_outcome_summary: "VER stayed out, passed Norris on track, won the race"
-  explanation_short: "Staying out was the right call - wet track favored experienced drivers"
+    - "fresh_inters"
+    - "used_inters"
+    - "gamble_slicks"
+  actual_decision: "fresh_inters"
+  actual_outcome_summary: "VER took fresh inters, restarted P2, passed Ocon on lap 43, won by commanding margin"
+  explanation_short: "Fresh inters were the safe choice — everyone did the same. The track wasn't dry enough for slicks."
   explanation_long: |
-    By pitting earlier, VER would have lost track position to Norris who had
-    fresher tires. By staying out, VER inherited the lead when Norris pitted
-    and controlled the race from the front in wet conditions.
+    Under the red flag, every car got free tire changes. The track had stopped
+    raining 11 laps ago and was gradually drying, but was nowhere near dry enough
+    for slick tires. Taking fresh intermediates was the consensus call — every
+    driver on the grid did the same. This preserved Verstappen's P2 restart
+    position and gave him 32-lap-fresher tires than before. After the restart,
+    he quickly closed the gap to Ocon and passed him for the lead on lap 43,
+    never looking back. Using worn inters would have saved a fresh set for later,
+    but there were only 37 laps remaining and no more rain was forecast.
   race_state:
     current_position: 2
-    gap_ahead_seconds: 1.2
-    gap_behind_seconds: 4.8
-    compound: "medium"
-    stint_age_laps: 14
-    laps_remaining: 39
-    track_temperature_c: 48
-    air_temperature_c: 29
+    gap_ahead_seconds: 3.0
+    gap_behind_seconds: 2.5
+    compound: "intermediate"
+    stint_age_laps: 32
+    laps_remaining: 37
+    track_temperature_c: 29
+    air_temperature_c: 23
+    rainfall: false
+    track_status: "red_flag"
+    safety_car_active: false
+    virtual_safety_car_active: false
+
+- id: "brazil_2024_lap43"
+  session_id: "R"
+  driver_id: "VER"
+  lap_number: 43
+  decision_type: "late_race_attack"
+  scenario_title: "Closing on Ocon — push for the lead or manage?"
+  scenario_description: |
+    Lap 43 of the 2024 Brazilian GP. The track is dry and temperatures are stable.
+    Your driver VER is P2, right behind race leader Ocon. Both are on intermediate
+    tires — VER's are 11 laps old (fresh from the red flag restart), Ocon's are
+    13 laps old. VER has been the fastest driver on track, carving through the
+    field from P17. The gap ahead is under a second. Team asks: push hard now to
+    take the lead, or manage your advantage to strike later?
+  available_actions:
+    - "push_for_lead"
+    - "wait_and_strike"
+    - "conserve_tires"
+  actual_decision: "push_for_lead"
+  actual_outcome_summary: "VER attacked immediately, passed Ocon on the same lap, dominated from P1"
+  explanation_short: "Pushing was the right call — VER was clearly faster and the track was only getting grippier as it dried."
+  explanation_long: |
+    Verstappen had been the fastest car all day after climbing from P17. Ocon, in
+    the Alpine, had inherited the lead through a well-timed pit stop and the red
+    flag. But on raw pace, VER was 1-2 seconds per lap faster. Pushing immediately
+    was the logical call — take P1, control the race from the front, and build the
+    gap. Waiting risked getting caught in Ocon's dirty air or losing tire temperature.
+    After passing Ocon, Verstappen pulled away at over a second per lap and was
+    never challenged again.
+  race_state:
+    current_position: 2
+    gap_ahead_seconds: 0.8
+    gap_behind_seconds: 3.0
+    compound: "intermediate"
+    stint_age_laps: 11
+    laps_remaining: 26
+    track_temperature_c: 28
+    air_temperature_c: 23
     rainfall: false
     track_status: "green"
     safety_car_active: false
     virtual_safety_car_active: false
 
-- id: "brazil_2024_lap48"
+- id: "brazil_2024_lap65"
   session_id: "R"
   driver_id: "VER"
-  lap_number: 48
-  decision_type: "switch_to_wet"
-  scenario_title: "Rain starting - wet weather call"
+  lap_number: 65
+  decision_type: "late_race_attack"
+  scenario_title: "Fastest lap gamble — push worn inters or manage to the flag?"
   scenario_description: |
-    Lap 48. Light rain has started. Track is drying but conditions are tricky.
-    Your driver is VER on intermediate tires, 18 laps old. Gap to P2 is 4.5 seconds.
-    Team asks: stay on inters or switch to wets?
+    Lap 65 of the 2024 Brazilian GP. VER leads by over 10 seconds on intermediate
+    tires that are now 33 laps old. The win is secure. But there's 1 championship
+    point available for fastest lap. The current fastest lap is 1:21.3 — VER's
+    inters are worn but the track is bone dry. Team asks: push for the fastest
+    lap bonus point, or manage to the flag and guarantee the win?
   available_actions:
-    - "stay_inter"
-    - "pit_wet"
-    - "wait_and_see"
-  actual_decision: "stay_inter"
-  actual_outcome_summary: "VER stayed on inters, built lead, won the race"
-  explanation_short: "Inters were the right call - track was mostly dry"
-  explanation_long: ""
+    - "push_for_fl"
+    - "manage_to_flag"
+    - "pit_softs_fl"
+  actual_decision: "push_for_fl"
+  actual_outcome_summary: "VER pushed, set the fastest lap on lap 67 (1:20.472), won with the bonus point"
+  explanation_short: "The risk was minimal — the gap was 10+ seconds and VER had the pace. He got the bonus point."
+  explanation_long: |
+    Verstappen was cruising to victory with a 10-second lead and only 4 laps
+    remaining. The fastest lap bonus point was a free opportunity — there was
+    almost no risk in trying for it. His intermediate tires, while 33 laps old,
+    were still performing well on the drying track. He put in a blistering 1:20.472
+    on lap 67, securing the bonus point. Pitting for softs would have guaranteed
+    the fastest lap but introduced unnecessary pit stop risk. Managing to the flag
+    would have been the safest call but left a point on the table.
   race_state:
     current_position: 1
     gap_ahead_seconds: null
-    gap_behind_seconds: 4.5
+    gap_behind_seconds: 11.5
     compound: "intermediate"
-    stint_age_laps: 18
-    laps_remaining: 23
-    track_temperature_c: 24
-    air_temperature_c: 20
-    rainfall: true
-    track_status: "green"
-    safety_car_active: false
-    virtual_safety_car_active: false
-
-- id: "brazil_2024_lap68"
-  session_id: "R"
-  driver_id: "VER"
-  lap_number: 68
-  decision_type: "extend_to_end"
-  scenario_title: "Final stint - tire management"
-  scenario_description: |
-    Lap 68 (final lap). VER is leading on hard tires, 28 laps old.
-    Gap to P2 is 12 seconds. Race is essentially over.
-    Team asks: push for fastest lap or manage to the finish?
-  available_actions:
-    - "push"
-    - "manage"
-    - "ease_off"
-  actual_decision: "manage"
-  actual_outcome_summary: "VER took the flag, finished P1"
-  explanation_short: "No point risking it - race was won"
-  explanation_long: ""
-  race_state:
-    current_position: 1
-    gap_ahead_seconds: null
-    gap_behind_seconds: 12.0
-    compound: "hard"
-    stint_age_laps: 28
-    laps_remaining: 3
+    stint_age_laps: 33
+    laps_remaining: 4
     track_temperature_c: 26
-    air_temperature_c: 20
+    air_temperature_c: 22
     rainfall: false
     track_status: "green"
     safety_car_active: false

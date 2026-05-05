@@ -71,130 +71,130 @@ def score_decision(
     effective_stint_age = context.stint_age + context.modifier_stint_age_delta
     modifiers_active = has_active_modifiers(context)
 
-    # Start with simulation-based base score
+    # Start at neutral
     score = 50
     grade = GRADE_RISKY
     explanation_parts = []
 
+    # --- UNDER RED FLAG: tire choice, not pit-vs-stay ---
+    under_red_flag = context.track_status == "red_flag"
+    is_tire_action = any(kw in user_action for kw in ("fresh", "used", "gamble", "inters", "slicks", "soft"))
+    
+    if under_red_flag and is_tire_action:
+        # Red flag — everyone is already in pits. Score the compound choice.
+        if "fresh" in user_action and "inter" in user_action:
+            score = 75  # Fresh inters — safe, consensus call
+            grade = GRADE_STRONG_CALL
+            explanation_parts.append("Fresh intermediates are the safe consensus call under the red flag.")
+        elif "used" in user_action:
+            score = 60  # Conservative — saving tires for later
+            grade = GRADE_RISKY
+            explanation_parts.append("Re-using worn tires saves a fresh set but compromises pace on restart.")
+        elif "gamble" in user_action or "slick" in user_action:
+            score = 35  # High risk — track might not be dry enough
+            grade = GRADE_RISKY
+            explanation_parts.append("Gambling on slicks under red flag is high-risk — the track may not be ready.")
+        elif "push" in user_action:
+            score = 80
+            grade = GRADE_STRONG_CALL
+            explanation_parts.append("Pushing now while others are conservative is bold but could pay off.")
+        elif "manage" in user_action or "conserve" in user_action:
+            score = 60
+            grade = GRADE_RISKY
+            explanation_parts.append("Managing through the red flag period is safe but doesn't capitalize on free tire change.")
+    elif under_red_flag:
+        # Under red flag but action doesn't match tire choice pattern
+        score = 40
+        grade = GRADE_POOR_CALL
+        explanation_parts.append("Under a red flag, tire strategy is the key decision point.")
+
     # --- Position impact from simulation ---
-    if sim_position < context.position:
-        score = 70
-        grade = GRADE_INSPIRED_CALL
-        explanation_parts.append(f"Simulation projects a gain to P{sim_position}.")
-    elif sim_position == context.position:
-        score = 55
-        grade = GRADE_RISKY
-        explanation_parts.append("Simulation projects holding position.")
-    else:
-        score = 35
-        grade = GRADE_POOR_CALL
-        explanation_parts.append(f"Simulation projects dropping to P{sim_position}.")
+    if not under_red_flag:
+        if sim_position < context.position:
+            score = min(score + 20, 100)
+            if grade not in (GRADE_MASTERFUL, GRADE_STRONG_CALL):
+                grade = GRADE_INSPIRED_CALL
+            explanation_parts.append(f"Simulation projects a gain to P{sim_position}.")
+        elif sim_position == context.position:
+            score = max(score, 55)
+            explanation_parts.append("Simulation projects holding position.")
+        else:
+            score = max(score - 15, 15)
+            explanation_parts.append(f"Simulation projects dropping to P{sim_position}.")
 
-    # --- Chaos modifier impact (these are the big differentiators) ---
-    modifier_explanations = []
-
-    # Safety Car / VSC: pitting is highly advantageous
+    # --- Safety Car / VSC bonuses ---
     if context.safety_car_active and user_action.startswith("pit_"):
-        score = min(score + 25, 100)
-        grade = GRADE_MASTERFUL
-        modifier_explanations.append("Pitting under Safety Car is a masterful call — minimal time loss.")
+        score = min(score + 20, 100)
+        if grade not in (GRADE_MASTERFUL,):
+            grade = GRADE_STRONG_CALL
+        explanation_parts.append("Pitting under Safety Car — well timed, minimal time loss.")
     elif context.safety_car_active and not user_action.startswith("pit_"):
-        score = max(score - 20, 0)
-        grade = GRADE_POOR_CALL
-        modifier_explanations.append("Staying out under Safety Car wastes a free pit opportunity.")
+        score = max(score - 10, 0)
+        explanation_parts.append("Staying out under Safety Car loses a cheap pit opportunity.")
 
     if context.virtual_safety_car_active and user_action.startswith("pit_"):
         score = min(score + 15, 100)
-        if grade not in (GRADE_MASTERFUL,):
-            grade = GRADE_STRONG_CALL
-        modifier_explanations.append("Pitting under VSC saves significant time.")
+        explanation_parts.append("Pitting under VSC saves time.")
 
-    # Red Flag: free pit window
-    if context.track_status == "red_flag" and user_action.startswith("pit_"):
-        score = min(score + 30, 100)
-        grade = GRADE_MASTERFUL
-        modifier_explanations.append("Red flag pit stop is effectively free — brilliant timing.")
-    elif context.track_status == "red_flag" and not user_action.startswith("pit_"):
-        score = max(score - 25, 0)
-        grade = GRADE_POOR_CALL
-        modifier_explanations.append("Missing a free pit under red flag is a major strategic error.")
-
-    # Rain: pitting for wets/inters is usually correct
+    # --- Rain adjustments ---
     if context.rainfall or context.track_status == "wet":
         if user_action.startswith("pit_") and ("wet" in user_action or "inter" in user_action):
-            score = min(score + 20, 100)
-            if grade not in (GRADE_MASTERFUL,):
+            score = min(score + 15, 100)
+            if grade not in (GRADE_MASTERFUL, GRADE_STRONG_CALL):
                 grade = GRADE_STRONG_CALL
-            modifier_explanations.append("Switching to wet-weather tires as rain starts is the right call.")
-        elif user_action.startswith("pit_") and not ("wet" in user_action or "inter" in user_action):
+            explanation_parts.append("Switching to wet tires in rainy conditions is correct.")
+        elif not user_action.startswith("pit_") and context.compound.lower() not in ("intermediate", "wet"):
             score = max(score - 15, 0)
-            modifier_explanations.append("Pitting for dry tires in the rain is a risky move.")
-        elif not user_action.startswith("pit_"):
-            score = max(score - 20, 0)
-            grade = GRADE_POOR_CALL
-            modifier_explanations.append("Staying on dry tires in wet conditions is dangerous.")
+            explanation_parts.append("Staying on dry tires in the rain is risky.")
 
-    # Tire cliff: staying out is very risky
+    # --- Tire cliff effects ---
+    if effective_stint_age > 25 and not user_action.startswith("pit_") and not under_red_flag:
+        score = max(score - 10, 0)
+        explanation_parts.append(f"Tires are {effective_stint_age} laps old — staying out risks the cliff.")
+    if effective_stint_age > 25 and user_action.startswith("pit_"):
+        score = min(score + 10, 100)
+        explanation_parts.append(f"Good call — tires at {effective_stint_age} laps are nearing the cliff.")
+
+    # --- Historical alignment (significant bonus for matching the actual decision) ---
+    if user_action == historical_action:
+        score = min(score + 20, 100)
+        if grade not in (GRADE_MASTERFUL, GRADE_POOR_CALL):
+            grade = GRADE_STRONG_CALL
+        explanation_parts.append("You matched the real team decision — which actually worked in the race.")
+    else:
+        explanation_parts.append("You chose differently from the real team.")
+
+    # --- Modifier-specific adjustments ---
     if context.modifier_stint_age_delta > 0:
         if not user_action.startswith("pit_") and effective_stint_age > 25:
-            score = max(score - 20, 0)
-            modifier_explanations.append(f"Tires are effectively {effective_stint_age} laps old — staying out risks a cliff.")
+            score = max(score - 10, 0)
+            explanation_parts.append(f"Chaos: tires effectively {effective_stint_age} laps old.")
         elif user_action.startswith("pit_") and effective_stint_age > 25:
-            score = min(score + 15, 100)
-            modifier_explanations.append(f"Pitting with effectively {effective_stint_age}-lap-old tires is well-timed.")
+            score = min(score + 10, 100)
+            explanation_parts.append("Chaos: pitting with effectively aged tires is well-timed.")
 
-    # Slow pit stop: penalty for pitting
     if context.modifier_pit_loss_delta > 0 and user_action.startswith("pit_"):
-        score = max(score - 15, 0)
-        modifier_explanations.append(f"A slow stop (+{context.modifier_pit_loss_delta:.0f}s) hurts the pit strategy.")
-
-    # Rival pits: not covering is risky
-    if context.gap_behind < 3.0 and not user_action.startswith("pit_"):
         score = max(score - 10, 0)
-        modifier_explanations.append("A close rival pitting this lap puts you at risk of being undercut.")
+        explanation_parts.append(f"Chaos: slow pit stop adds {context.modifier_pit_loss_delta:.0f}s penalty.")
 
-    # --- Historical alignment bonus (diminished when modifiers change the game) ---
-    if user_action == historical_action:
-        if modifiers_active:
-            # With modifiers, historical decision might not be optimal anymore
-            score = min(score + 5, 100)
-            explanation_parts.append("Same call as the real team, but conditions have changed.")
-        else:
-            score = min(score + 15, 100)
-            if grade not in (GRADE_MASTERFUL, GRADE_OFF_THE_WALL):
-                grade = GRADE_STRONG_CALL
-            explanation_parts.append("You made the same call as the real team!")
-    else:
-        if not modifiers_active:
-            explanation_parts.append("You chose differently from the real team.")
-
-    # --- Tire age bonuses (generic) ---
-    if user_action.startswith("pit_") and effective_stint_age > 20:
-        score = min(score + 8, 100)
-        explanation_parts.append("Good timing on the pit stop given tire age.")
-
-    if user_action == ACTION_STAY_OUT and effective_stint_age < 10:
-        score = max(score - 10, 0)
-        explanation_parts.append("Tires still had plenty of life — pitting early was aggressive.")
-
-    # Clamp score
+    # Clamp
     score = max(0, min(100, score))
 
-    # Build final explanation
-    if modifier_explanations:
-        explanation = " ".join(modifier_explanations + explanation_parts)
-    else:
-        explanation = " ".join(explanation_parts)
-
+    # Build explanation
+    explanation = " ".join(explanation_parts)
     if not explanation:
         explanation = "Decision evaluated against simulation and historical context."
+
+    model_rec = context.compound.lower() if under_red_flag else (
+        ACTION_PIT_NOW if sim_position < context.position else ACTION_STAY_OUT
+    )
 
     return {
         "score": score,
         "grade": grade,
         "explanation": explanation,
         "historical_decision": historical_action,
-        "model_recommendation": ACTION_PIT_NOW if sim_position < context.position else ACTION_STAY_OUT,
+        "model_recommendation": model_rec,
     }
 
 
