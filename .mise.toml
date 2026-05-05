@@ -1,0 +1,5 @@
+[tools]
+python = "3.11"
+
+[aqua]
+skip_verify = true
