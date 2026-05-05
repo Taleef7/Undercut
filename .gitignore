@@ -51,3 +51,12 @@ data/validation_report_*.json
 .DS_Store
 Thumbs.db
 .vercel
+
+# Playwright / E2E
+.playwright-mcp/
+screenshots/
+*.png
+
+# ML artifacts (train outputs, not source)
+ml/artifacts/*.joblib
+ml/artifacts/*.json
